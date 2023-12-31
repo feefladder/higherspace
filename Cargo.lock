@@ -172,6 +172,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "exact"
+version = "0.1.0"
+dependencies = [
+ "fraction",
+]
+
+[[package]]
+name = "exact_macros"
+version = "0.1.0"
+
+[[package]]
 name = "fallible-iterator"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -278,19 +289,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8094feaf31ff591f651a2664fb9cfd92bba7a60ce3197265e9482ebe753c8f7"
 dependencies = [
  "hashbrown",
-]
-
-[[package]]
-name = "higherspace"
-version = "0.1.0"
-dependencies = [
- "fraction",
- "lazy_static",
- "ndarray",
- "ndarray-linalg",
- "petgraph",
- "regex",
- "rusqlite",
 ]
 
 [[package]]
@@ -631,6 +629,19 @@ name = "pkg-config"
 version = "0.3.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
+
+[[package]]
+name = "polytope"
+version = "0.1.0"
+dependencies = [
+ "fraction",
+ "lazy_static",
+ "ndarray",
+ "ndarray-linalg",
+ "petgraph",
+ "regex",
+ "rusqlite",
+]
 
 [[package]]
 name = "ppv-lite86"

@@ -21,7 +21,6 @@ use petgraph::algo::{is_isomorphic_subgraph_matching, subgraph_isomorphisms_iter
 use crate::parse::Scanner;
 
 pub mod parse;
-pub mod exact;
 
 pub type CoxGraph<T> = UnGraph<CoxNode<T>, CoxEdge, u32>;
 

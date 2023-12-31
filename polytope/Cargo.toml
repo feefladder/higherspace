@@ -1,0 +1,16 @@
+[package]
+name = "polytope"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+fraction = { git = "https://github.com/dnsl48/fraction", version = "0.14.0" }
+lazy_static = "1.4.0"
+ndarray = {version = "0.15.6", features=["approx"]}
+ndarray-linalg = {version = "0.16.0", features=["openblas-system"]}
+petgraph = "0.6.4"
+regex = "1.10.2"
+rusqlite = "0.30.0"
+
