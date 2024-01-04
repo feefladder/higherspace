@@ -13,4 +13,4 @@ ndarray-linalg = {version = "0.16.0", features=["openblas-system"]}
 petgraph = "0.6.4"
 regex = "1.10.2"
 rusqlite = "0.30.0"
-
+exact = {path = "../exact"}

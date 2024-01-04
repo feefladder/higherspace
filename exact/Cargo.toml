@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 fraction = { git = "https://github.com/dnsl48/fraction", version = "0.14.0" }
+lyn = "0.1.0"
+num = "0.4.1"

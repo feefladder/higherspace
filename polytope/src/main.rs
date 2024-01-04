@@ -1,5 +1,5 @@
-#[macro_use]
-extern crate lazy_static;
+// #[macro_use]
+// extern crate lazy_static;
 
 use petgraph::stable_graph::EdgeIndex;
 // use petgraph::adj::EdgeIndex;
@@ -16,6 +16,8 @@ use std::f64::consts::PI;
 
 use petgraph::graph::{UnGraph, NodeIndex, Node};
 use petgraph::algo::{is_isomorphic_subgraph_matching, subgraph_isomorphisms_iter};
+
+use exact::F;
 
 // use crate::parse::parse;
 use crate::parse::Scanner;
@@ -348,7 +350,7 @@ fn reflect_matrices<T>(symm: &mut CoxGraph<f64>) -> Result<(),()> {
 
     // println!("p: {:?}, i: {:?}, mats: {:?}", n,i, mats);
   }
-  if mats[0].abs_diff_eq( &mats[mats.len()-1], 1e-14) {
+  if mats[0].abs_diff_eq( &mats[mats.len()-1], 1e-15) {
     println!("Yay! we're in some poly thingy");
 
   } else {
@@ -547,6 +549,20 @@ fn main() -> Result<(),()>{
 
   reflect_matrices::<f64>(&mut group.graph)?;
   println!("{:?}", f64::try_from(GenericFraction::<u32>::new(1u8,2u8)));
+  
+  use std::rc::Rc;
+
+  let data = 5;
+  let mut rc_a = Rc::new(data);
+  let rc_b = Rc::new(data);
+  let c =  Rc::<i32>::get_mut(&mut rc_a).unwrap();
+  *c += 5;
+  println!("a: {:p}:{:?}, {:p},{:p}", rc_b, rc_b, rc_a, &data);
+  let f = F::new(1u8,2u8);
+  println!("pretty: {}, debug: {:?}, pretty debug: {:#?}",-f,f,f);
+  println!("{}", (PI*5.0).sin());
+
+  // use 
   // iso_map(&mut group.graph)?;
   // conn.execute(
   //     "create table if not exists cat_colors (

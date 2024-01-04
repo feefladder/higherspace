@@ -1,84 +1,176 @@
-use fraction::GenericFraction;
 use std::rc::Rc;
+use std::f64::consts::{PI,E};
 
-use crate::structs::sqrt::Sqrt;
+use crate::F;
+use crate::structs::{Const, Sum, Prod, Sqrt};
 
-use std::ops::{Add, Mul, Div, };
+mod from;
+mod mul;
+mod add;
+pub use from::*;
+pub use mul::*;
+pub use add::*;
 
+// #[derive(Debug, PartialEq, Clone)]
+// pub enum VOrRef {
+//   Val(F),
+//   Ref(Rc<Expr>),
+// }
 
-pub type F = GenericFraction<u32>;
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum VOrRef {
-  Val(F),
-  Ref(Rc<Expr>),
-}
-
-#[derive(Debug, PartialEq, Clone)]
+/// Expression using Rc<T> This type does not know if there are duplicates
+/// use like:
+/// let half = F::new(1u8,2u8); // <- for convenience
+/// let val_1 = Expr::from(1u32);
+/// let val_5 = Expr::from(5u32);
+/// let sqrt_5 = Expr::sqrt(val_5);
+/// let phi = Expr::from(
+///   vec![(half,val_1),(half,sqrt_5)]
+/// )
+/// let phi_sq = Expr::from(
+///   vec![(F::new(3u8,2u8),val_1),(half,sqrt_5)]
+/// )
+/// to be sure that sqrt_5 is shared among phi and phi_sq
+#[derive(PartialEq, Clone)]
 pub enum Expr {
-  /// Constant like pi
-  Const {
-    ch: char,
-    f64: f64,
-  },
   /// Just a number
-  Val(F),
+  /// Needs to be there, since sqrt(2)*sqrt(2) = 2
+  Val(Rc<F>),
+  /// Constant like pi
+  Const(Rc<Const>),
   /// Sum of terms
   /// Note that
-  Sum {
-    terms: Vec<(F,Box<Expr>)>,
-  },
+  Sum(Rc<Sum>),
   /// Product of factors
   /// Notice that e.g. 2pi is already a product
-  Prod {
-    factors: Vec<(Box<Expr>,F)>,
-  },
-  Sqrt(Sqrt),
-  Cos {
-    v: Box<Expr>,
-  },
-  Sin {
-    v: Box<Expr>,
+  Prod(Rc<Prod>),
+  Sqrt(Rc<Sqrt>),
+}
+
+impl Expr {
+  #[inline]
+  pub fn val_i<T>(i: T) -> Expr where F: From<T>{
+    Expr::Val(Rc::new(F::from(i)))
+  }
+  #[inline]
+  pub fn val_frac(f: F) -> Expr {
+    Expr::Val(Rc::new(f))
+  }
+  #[inline]
+  pub fn c_pi() -> Expr{
+    Expr::Const(Rc::new(Const { ch: 'π', f64: PI }))
+  }
+  #[inline]
+  pub fn c_e() -> Expr{
+    Expr::Const(Rc::new(Const { ch: 'e', f64: E }))
+  }
+  #[inline]
+  pub fn sqrt_i(i: u32) -> Expr {
+    Expr::Sqrt(Rc::new(Sqrt(Expr::val_i(i))))
+  }
+  #[inline]
+  pub fn sqrt_frac(f: F) -> Expr {
+    Expr::Sqrt(Rc::new(Sqrt(Expr::from(f))))
+  }
+  #[inline]
+  pub fn sqrt_expr(expr: Expr) -> Expr {
+    Expr::Sqrt(Rc::new(Sqrt(expr)))
+  }
+  #[inline]
+  pub fn sum_i_pi(i: u32) -> Expr {
+    Expr::Sum(Rc::new(Sum{
+      terms : vec![
+        (F::from(i),Expr::c_pi())
+      ]
+    }))
+  }
+  #[inline]
+  pub fn sum_i_expr(i:u32, e: Expr) -> Expr {
+    Expr::Sum(Rc::new(Sum{
+      terms : vec![
+        (F::from(i),e)
+      ]
+    }))
+  }
+  #[inline]
+  pub fn sum_i_plus_pi(i: u32) -> Expr {
+    Expr::Sum(Rc::new(Sum { 
+      terms: vec![
+        (F::from(i),Expr::val_i(1)),
+        (F::from(1),Expr::c_pi()),
+      ]
+     }))
+  }
+  /// the golden ratio: (1+sqrt(5))/2 = 1/2+1/2sqrt(5)
+  #[inline]
+  pub fn sum_phi() -> Expr {
+    Expr::Sum(Rc::new(Sum { terms: vec![
+      (F::new(1u8, 2u8), Expr::val_i(1)),
+      (F::new(1u8, 2u8), Expr::sqrt_i(5))
+    ] }))
+  }
+  #[inline]
+  pub fn prod_pi_i(i:u32) -> Expr {
+    Expr::Prod(Rc::new(Prod{factors:vec![
+      (Expr::c_pi(),F::from(i)),
+    ]}))
+  }
+  #[inline]
+  pub fn prod_pi_times_sqrt_i(i: u32) -> Expr {
+    Expr::Prod(Rc::new(Prod { factors: vec![
+      (Expr::c_pi(),F::from(1)),
+      (Expr::sqrt_i(i),F::from(1))
+    ] }))
   }
 }
 
-impl Mul for Expr {
-  type Output = Self;
-  fn mul(self, rhs: Self) -> Self::Output {
-      match (self, rhs) {
-          (Expr::Val(vs), Expr::Val(vr)) => {
-            Expr::Val(vs*vr)
-          },
-          _ => {
-            todo!("implement multiplication for other types")
-          }
-      }
-  }
+/// Get the expression of a functional expression, such as Sqrt, Sin, Cos, Tan
+/// Currently only sqrt. 
+/// √5/2 -> ξ5/2
+/// Expr::Sqrt(Rc<Sqrt(expr)>) -> expr
+pub trait GetExpr {
+  fn get_expr(&self) -> Option<Expr>;
 }
 
-
-impl Mul<Expr> for &mut Rc<Expr> {
-  type Output = Rc<Expr>;
-  fn mul(self, rhs: Expr) -> Self::Output {
-    match Rc::<Expr>::get_mut(self) {
-        Some(s) => {
-          
+impl GetExpr for Expr {
+  fn get_expr(&self) -> Option<Expr> {
+    match &self {
+        Expr::Sqrt(s) => {
+          Some(s.as_ref().clone().0)
         },
-        None => {
-          match (&*self, rhs) {
-            (Expr::Val(vs), Expr::Val(vr)) => {
-              let m = Rc::<Expr>::get_mut(self);
-              Rc::new(Expr::Val(vs*vr))
-            },
-            _ => {
-              todo!("Implement multiplication for other Rc types")
-            }
-        }
+        _ => {
+          None
         }
     }
-      
   }
 }
+
+
+
+
+// impl Mul<Expr> for &mut Rc<Expr> {
+//   // pub mod sqrt;
+//   // pub mod prod;
+//   type Output = Rc<Expr>;
+//   fn mul(&self, rhs: Expr) -> Self::Output {
+//     match Rc::<Expr>::get_mut(self) {
+//         Some(s) => {
+//           todo!("AA")
+//         },
+//         None => {
+//           match (&*self, rhs) {
+//             (Expr::Val(vs), Expr::Val(vr)) => {
+//               let m = Rc::<Expr>::get_mut(self);
+//               Rc::new(Expr::Val(vs*vr))
+//             },
+//             _ => {
+//               todo!("Implement multiplication for other Rc types")
+//             }
+//         }
+//         }
+//     }
+      
+//   }
+// }
 
 // impl PartialEq for Expr {
 //   fn eq(&self, other: &Self) -> bool {
@@ -88,7 +180,7 @@ impl Mul<Expr> for &mut Rc<Expr> {
 
 // impl Mul for Expr {
 //   type Output = Self;
-//   fn mul(self, rhs: Self) -> Self::Output {
+//   fn mul(&self, rhs: Self) -> Self::Output {
 //       match self {
 //         Expr::Frac( f ) => {
 //           match rhs {

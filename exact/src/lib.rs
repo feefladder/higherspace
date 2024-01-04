@@ -1,8 +1,13 @@
-use std::collections::{HashSet, hash_map::RandomState};
-pub mod enums;
-pub mod structs;
-pub mod traits;
+use fraction::GenericFraction;
+// use std::collections::{HashSet, hash_map::RandomState};
 
+pub mod expr_rc;
+pub mod structs;
+pub mod io;
+
+pub type F = GenericFraction<u32>;
+
+// pub use expr_rc::*;
 // pub struct Ring(HashSet<ExprLayer, RandomState>);
 
 // pub enum ExprLayer<A>

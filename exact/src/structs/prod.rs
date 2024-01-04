@@ -2,8 +2,10 @@
 use crate::enums::{Expr};
 use std::rc::Rc;
 use std::ops::{Add, Mul};
+
+/// A product of factors. Note that pi²=pi*pi is a product of factors.
 struct Prod {
-  factors: Vec<(Rc<Expr>, i64)>
+  factors: Vec<(Expr, i64)>
 }
 
 // impl Mul<Prod> for Prod {
