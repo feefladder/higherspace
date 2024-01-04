@@ -7,9 +7,11 @@ use crate::structs::{Const, Sum, Prod, Sqrt};
 mod from;
 mod mul;
 mod add;
+mod inv;
 pub use from::*;
 pub use mul::*;
 pub use add::*;
+pub use inv::*;
 
 // #[derive(Debug, PartialEq, Clone)]
 // pub enum VOrRef {

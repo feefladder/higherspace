@@ -9,3 +9,5 @@ edition = "2021"
 fraction = { git = "https://github.com/dnsl48/fraction", version = "0.14.0" }
 lyn = "0.1.0"
 num = "0.4.1"
+num-traits = "0.2.17"
+proptest = "1.4.0"
