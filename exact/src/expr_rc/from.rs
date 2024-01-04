@@ -28,7 +28,9 @@ impl Zero for Expr {
   }
 
   fn set_zero(&mut self) {
-      todo!()
+
+    // let e = &mut Expr::zero();
+    // self = e;
   }
 }
 
@@ -56,6 +58,8 @@ impl From<(char, f64)> for Expr {
 /// From a sum-type vector: Vec<(F, Expr)>
 impl From<Vec<(F, Expr)>> for Expr {
   fn from(value: Vec<(F, Expr)>) -> Self {
+    if value.len() == 0 {return Expr::zero();}
+    if value.len() == 1 && value[0].0 == F::one() {return value[0].1.clone();}
     Expr::Sum(Rc::new(Sum { terms: value }))
   }
 }
@@ -63,6 +67,8 @@ impl From<Vec<(F, Expr)>> for Expr {
 /// From a prod-type vector: Vec<(Expr, F)>
 impl From<Vec<(Expr, F)>> for Expr {
   fn from(value: Vec<(Expr, F)>) -> Self {
+    if value.len() == 0 {return Expr::zero();}
+    if value.len() == 1 && value[0].1 == F::one() {return value[0].0.clone();}
     Expr::Prod(Rc::new(Prod { factors: value }))
   }
 }
