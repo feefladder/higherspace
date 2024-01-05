@@ -232,7 +232,7 @@ impl Mul for Expr {
 //             ));
 //           } else {
 //             Expr::Prod(Rc::new(
-//               Prod { factors: vec![(&self, F::from(1)),(rhs, F::from(1))] }
+//               Prod { factors: vec![(&self, F::one()),(rhs, F::one())] }
 //             ));
 //           }
 //         },

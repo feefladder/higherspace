@@ -1,8 +1,10 @@
 pub use num_traits::Inv;
 
+
 use crate::{
   F,
-  expr_rc::Expr
+  One,
+  expr_rc::Expr,
 };
 
 impl Inv for Expr {
@@ -11,7 +13,10 @@ impl Inv for Expr {
       match &self {
         Expr::Val(v) => {
           let f: F = **v;
-          Expr::from(F::from(1)/f)
+          Expr::from(F::one()/f)
+        },
+        Expr::Prod(p) => {
+          todo!()
         }
         _ => Expr::from(vec![(self, F::from(-1))])
       }

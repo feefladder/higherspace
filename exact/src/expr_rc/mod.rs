@@ -1,8 +1,11 @@
 use std::rc::Rc;
 use std::f64::consts::{PI,E};
 
-use crate::F;
-use crate::structs::{Const, Sum, Prod, Sqrt};
+use crate::{
+  F,
+  One,
+  structs::{Const, Sum, Prod, Sqrt}
+};
 
 mod from;
 mod mul;
@@ -49,6 +52,18 @@ pub enum Expr {
 }
 
 impl Expr {
+  #[inline]
+  pub fn nan() -> Expr {
+    Expr::Val(Rc::new(F::nan()))
+  }
+  #[inline]
+  pub fn infinity() -> Expr {
+    Expr::Val(Rc::new(F::infinity()))
+  }
+  #[inline]
+  pub fn neg_infinity() -> Expr {
+    Expr::Val(Rc::new(F::neg_infinity()))
+  }
   #[inline]
   pub fn val_i<T>(i: T) -> Expr where F: From<T>{
     Expr::Val(Rc::new(F::from(i)))
@@ -98,7 +113,7 @@ impl Expr {
     Expr::Sum(Rc::new(Sum { 
       terms: vec![
         (F::from(i),Expr::val_i(1)),
-        (F::from(1),Expr::c_pi()),
+        (F::one(),Expr::c_pi()),
       ]
      }))
   }
@@ -119,8 +134,8 @@ impl Expr {
   #[inline]
   pub fn prod_pi_times_sqrt_i(i: u32) -> Expr {
     Expr::Prod(Rc::new(Prod { factors: vec![
-      (Expr::c_pi(),F::from(1)),
-      (Expr::sqrt_i(i),F::from(1))
+      (Expr::c_pi(),F::one()),
+      (Expr::sqrt_i(i),F::one())
     ] }))
   }
 }
@@ -133,6 +148,10 @@ pub trait GetExpr {
   fn get_expr(&self) -> Option<Expr>;
 }
 
+/// Get the expression of a functional expression, such as Sqrt, Sin, Cos, Tan
+/// Currently only sqrt. 
+/// √5/2 -> ξ5/2
+/// Expr::Sqrt(Rc<Sqrt(expr)>) -> expr
 impl GetExpr for Expr {
   fn get_expr(&self) -> Option<Expr> {
     match &self {
@@ -208,7 +227,7 @@ impl GetExpr for Expr {
 //                 if self == rhs {
 //                   Expr::Prod { factors: vec![(Box::new(self),F::from(2))] }
 //                 } else {
-//                   Expr::Prod { factors: vec![(Box::new(self),F::from(1)),(Box::new(rhs),F::from(1))] }
+//                   Expr::Prod { factors: vec![(Box::new(self),F::one()),(Box::new(rhs),F::one())] }
 //                 }
 //               },
 //               Expr::Sum { terms } => {
@@ -222,19 +241,19 @@ impl GetExpr for Expr {
 //                 match factors.iter().position(|(e,p)| *e == self) {
 //                   Some(p) => {
 //                     let mut f = &factors[p];
-//                     (*f).1 = (*f).1 + F::from(1);
+//                     (*f).1 = (*f).1 + F::one();
 //                     Expr::Prod { factors: factors }
 //                   },
 //                   None => {
-//                     factors.push((Box::new(self),F::from(1)));
+//                     factors.push((Box::new(self),F::one()));
 //                     Expr::Prod { factors: factors }
 //                   }
 //                 }
 //               },
 //               _ => {
 //                 Expr::Prod { factors: vec![
-//                   (Box::new(rhs),F::from(1)),
-//                   (Box::new(self), F::from(1)),
+//                   (Box::new(rhs),F::one()),
+//                   (Box::new(self), F::one()),
 //                 ]}
 //               }
 //           }
