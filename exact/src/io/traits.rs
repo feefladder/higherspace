@@ -1,6 +1,6 @@
 use lyn::Error;
 
-use crate::{expr_rc::Expr, structs::Const};
+use crate::expr_rc::Expr;
 
 pub trait ParseDisplay {
   fn parse_display(input: String) -> Result<Expr, Error>;

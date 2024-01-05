@@ -4,6 +4,7 @@ use fraction::GenericFraction;
 pub mod expr_rc;
 pub mod structs;
 pub mod io;
+pub use num::{One, Zero};
 
 pub type F = GenericFraction<u32>;
 

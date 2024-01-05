@@ -5,6 +5,7 @@ use std::{
 
 /// Parser for parsing display-type strings
 /// e.g. 
+use num::One;
 use lyn::Error;
 
 use crate::{
@@ -78,7 +79,7 @@ fn pd_sqrt(sc: &mut Scanner) -> Result<Expr, Error> {
 /// Fraction: [-]<num>/<den>
 /// where
 fn pd_frac(sc: &mut Scanner) -> Result<F, Error> {
-  let mut f = F::from(1);
+  let mut f = F::one();
   if sc.take(&'-') {
     f *= -1;
   }
