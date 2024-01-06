@@ -7,6 +7,9 @@ use crate::{F, expr_rc::Expr, io::{Char,ParseDisplay}};
 // pub mod sqrt;
 // pub mod prod;
 
+pub mod only_read_grow_array;
+pub mod string_expression;
+pub use string_expression::*; // as str_expr;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Const {
