@@ -1,7 +1,11 @@
 use std::ops::Mul;
 use num::{One, Zero};
 use num_traits::Inv;
-use super::*;
+
+use crate::expr_rc::{
+  F,
+  Expr,
+};
 
 impl Mul for Expr {
   type Output = Self;
@@ -298,7 +302,7 @@ mod test_e_rc_mul {
       ("Σ[(1,ξ1),(1,π)]","Π(Σ[(1,ξ1),(1,π)],-1)"),
       ("Π(π,2)","Π(π,-2)"),
       // super panic
-      // ("Π[(π,1),(e,1)]","Π[(π,-1),(e,-1)]"),
+      ("Π[(π,1),(e,1)]","Π[(π,-1),(e,-1)]"),
       ("√2","Σ(1/2,√2)"),
     ];
     for (a,b) in test_vec {

@@ -156,7 +156,7 @@ fn pd_sum_tuple(sc: &mut Scanner) -> Result<(F, Expr), Error> {
   Ok((f,e))
 }
 
-/// Prod Π[(ξ1,1/2),(√5,1/2)] or Π(ξ1,1/2)
+/// Prod Π[(ξ1,1/2),(√5,1/2)] or Π(ξ1,1/2) or Π{_[n=]<int>}{[^]<int>}[<expr>]
 /// will match the part without 'Π': [(ξ1,1/2),(√5,1/2)]
 /// (expr,frac),
 fn pd_prod(sc: &mut Scanner) -> Result<Expr, Error> {

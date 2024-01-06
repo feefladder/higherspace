@@ -7,16 +7,38 @@ use num::{Integer, integer::Roots};
 
 use crate::{
   F,One,Zero,
-  expr_rc::{Expr,GetExpr},
-  structs::Prod,
+  expr_rc::{
+    Expr,
+    GetExpr,
+    simplify::{
+      collect_like,
+      prod::{
+        collect_like_factors,
+        convert_to_sqrt,
+      }
+    }, PVec
+  },
+  structs::Prod, FType,
 };
 
-type Pvec = Vec<(Expr, F)>;
-/// From a prod-type vector: Pvec
+use super::FromRaw;
+
+impl FromRaw<PVec> for Expr {
+  fn from_raw(v: PVec) -> Self {
+    if v.len() == 0 {return Expr::one();}
+    if v.len() == 1 && v[0].1 == F::one() {
+      v[0].0.clone()
+    } else {
+      Expr::Prod(Rc::new(Prod { factors: v }))
+    }
+  }
+}
+
+/// From a prod-type vector: PVec
 /// Also simplifies
 /// Contained products should already be simplified
-impl From<Pvec> for Expr {
-  fn from(mut v: Pvec) -> Self {
+impl From<PVec> for Expr {
+  fn from(mut v: PVec) -> Self {
     // Prod: sqrt to power and expand products
     sqrt_to_power_expand_prods(&mut v);
     // Prod: expand exponents for vals
@@ -32,7 +54,7 @@ impl From<Pvec> for Expr {
     // Π[(2,1/2),(3,1/2)] -> Π(2*3,1/2)
     v = collect_like_num_powers(v);
     // Prod+Sum: collect like terms
-    v = collect_like_terms(v);
+    v = collect_like_factors(v);
     // Prod+Sum: strip zeroes
     // Π(π,0) -> Π() -> ξ1
     // Σ(0,π) -> Σ() -> ξ1
@@ -43,22 +65,16 @@ impl From<Pvec> for Expr {
     coeff *= take_roots(&mut v);
     convert_to_sqrt(&mut v);
     // 1*Π(π,1) -> π
-    if v.len() == 0 {return Expr::val_frac(coeff);}
-    let prod = if v.len() == 1 && v[0].1 == F::one() {
-      v[0].0.clone()
+    if coeff == F::one() {
+      Expr::from_raw(v)
     } else {
-      Expr::Prod(Rc::new(Prod { factors: v }))
-    };
-    if coeff.is_one() {
-      prod
-    } else {
-      Expr::from(vec![(coeff, prod)])
+      Expr::from_raw(vec![(F::from(coeff),Expr::from_raw(v))])
     }
   }
 }
 
 #[inline]
-fn sqrt_to_power(v: &mut Pvec) {
+fn sqrt_to_power(v: &mut PVec) {
   for (maybe_sqrt, exp) in v.iter_mut() {
     match maybe_sqrt {
         Expr::Sqrt(_) => {
@@ -70,12 +86,12 @@ fn sqrt_to_power(v: &mut Pvec) {
   }
 }
 
-/// Prod: expand prods (?would be recursive if unsafe?)
+/// Prod: expand prods (recursive)
 /// Π(Π[(π,1),(e,1)],1/3),(e,1)) -> Π[(π,1/3),(e,4/3)]
 /// First append: Π(Π[(π,1),(e,1)],1/3),(e,1),(π,1/3),(e,1/3))
 /// then filter: Π((e,1),(π,1/3),(e,1/3))    ^--------------^
 #[inline]
-fn sqrt_to_power_expand_prods(v: &mut Pvec) {
+fn sqrt_to_power_expand_prods(v: &mut PVec) {
   sqrt_to_power(v);
   for (maybe_prod, exp) in v.clone().iter() {
     match maybe_prod {
@@ -99,51 +115,17 @@ fn sqrt_to_power_expand_prods(v: &mut Pvec) {
   v.retain(|(f,_)| !matches!(f, &Expr::Prod(_)));
 }
 
-/// Prod+Sum: collect like terms
-/// Π[(π,a),(π,b)] -> Π(π,a+b)
-/// Π[(π,1),(e,2),(π,3)]
-// Π[(2,1/2),(3,1/2)] -> Π(6,1/2)
-#[inline]
-fn collect_like_terms(v: Pvec) -> Pvec {
-  let mut new_vec: Pvec = Vec::new();
-  for (fact, exp) in v {
-    match new_vec.iter_mut().find(|(f,_)| f== &fact) {
-      Some((_, exp_mut)) => {
-        *exp_mut += exp;
-      },
-      None => { 
-        new_vec.push((fact, exp));
-      }
-    }
-  }
-  new_vec
-}
 
-fn collect_like_num_powers(vec: Pvec) -> Pvec {
+pub fn collect_like_num_powers(vec: PVec) -> PVec {
   collect_like(
     vec, 
     |(f1,e1),(f2,e2)| matches!((f1,f2),(Expr::Val(_),Expr::Val(_))) && *e1==e2 ,
     |(f1,_),(f2,_)| *f1 = f1.clone() * f2)
 }
 
-#[inline]
-fn collect_like<T: Clone>(vec: Vec<T>, mut fn_match: impl FnMut(&&mut T, T) -> bool, fn_add: impl Fn(&mut T,T)) -> Vec<T> {
-  let mut new_vec: Vec<T> = Vec::new();
-  for item in vec {
-    match new_vec.iter_mut().find(|a|fn_match(a,item.clone())) {
-      Some(matc) => {
-        fn_add(matc, item);
-      },
-      None => {
-        new_vec.push(item);
-      }
-    }
-  }
-  new_vec
-}
 
 #[inline]
-fn take_roots(v: &mut Pvec) -> F {
+fn take_roots(v: &mut PVec) -> F {
   let mut coeff = F::one();
   for (f_expr, exp) in v.iter_mut() {
     match f_expr {
@@ -196,7 +178,7 @@ fn factor_root(base: &mut Ratio<u32>, exp: &mut Ratio<u32>) -> F {
 }
 
 #[inline]
-fn neg_pow_sign(sign: Sign, pow: i32) -> Sign {
+fn neg_pow_sign<T: Integer>(sign: Sign, pow: T) -> Sign {
   if pow.is_odd() {sign} else {Sign::Plus}
 }
 
@@ -212,7 +194,7 @@ fn neg_pow_sign(sign: Sign, pow: i32) -> Sign {
 /// also: ∞*0 and ∞*0 checks
 /// Π(1,∞) -> Nan  Π(∞,0) -> Nan
 /// Π()
-fn take_out_vals(vect: &mut Pvec) -> F {
+fn take_out_vals(vect: &mut PVec) -> F {
   println!("Taking vals: {:?}", vect);
   let mut coeff: F = F::one();
   for (fact_expr, exp_frac ) in vect.iter_mut() {
@@ -268,18 +250,12 @@ fn take_out_vals(vect: &mut Pvec) -> F {
             println!("Doing r^r: {:?}^{:?}", e_sign_i, exp_int);
             let new_exp_frac:F = F::Rational(*exp_sign, exp_r.fract());
             let new_f_sign = neg_pow_sign(fact_sign, exp_int);
+            // coeff *= val_neg_exp_to_pos(exp_sign, &mut new_exp_frac, exp_denom, fact_r);
             // Π(ξ2,-1/2) -> 1/2, Π(ξ2,1/2)
-            if *exp_sign == Sign::Minus {
-              let exp_denom: i32 = (*
-                new_exp_frac
-                .denom()
-                .unwrap())
-                .try_into()
-                .unwrap();
-              coeff *= F::Rational(neg_pow_sign(fact_sign, exp_denom), fact_r.pow( exp_denom));
-            }
+            // Π(ξ2,-1/2) -> ξ2.pow(2/1), Π(ξ2,1/2)
+            // Π(ξ-2,-2/3) -/-> 2.pow(3/2) Π(ξ2,2/3)
             // 
-            coeff *= F::Rational(neg_pow_sign(fact_sign, exp_int),fact_r.pow(e_sign_i*exp_int));
+            coeff *= div_by_root_to_f_times_root_raw(fact_sign, fact_r, *new_exp_frac.denom().unwrap());
             *exp_frac = new_exp_frac;
           },
           _ => unreachable!()
@@ -291,12 +267,35 @@ fn take_out_vals(vect: &mut Pvec) -> F {
   coeff
 }
 
-fn convert_to_sqrt(v: &mut Pvec) {
-  for (f, exp) in v.iter_mut() {
-    if *exp == F::new(1u8,2u8) {
-      *exp = F::one();
-      *f = Expr::sqrt_expr(f.clone());
-    }
+/// Π(ξ2,-1/2) -> 1/2, Π(ξ2,1/2)
+/// Π(ξ2,-1/2) -> ξ2.pow(2/1)* Π(ξ2,1/2)
+/// Π(ξ-2/5,-1/3) -> (-2/5).pow(3)* Π(ξ-2/5,1/3)
+pub fn div_by_root_to_f_times_root(base: F, exp:&mut F) -> F {
+  match (base, exp) {
+    (F::Rational(b_sgn, b_r),F::Rational(e_sgn, e_r)) => {
+      if *e_r.numer() != 1 || b_sgn == Sign::Plus {
+        F::one()
+      } else {
+        div_by_root_to_f_times_root_raw(b_sgn, b_r, *e_r.denom())
+      }
+    },
+    _ => todo!()
+  }
+}
+
+/// ```raw
+/// Π(ξ2,-1/2) -> 1/2, Π(ξ2,1/2)
+/// Π(ξ2,-1/2) -> ξ2.pow(2/1)* Π(ξ2,1/2)
+/// Π(ξ-2/5,-1/3) -> (-2/5).pow(3)* Π(ξ-2/5,1/3)
+///    ||      \-exp_den
+///    |\-b_r
+///    \-b_sgn
+/// ```
+fn div_by_root_to_f_times_root_raw(b_sgn:Sign, b_r: Ratio<FType>, exp_den: FType) -> F {
+  if exp_den == 1 {
+    F::one()
+  } else {
+    F::Rational(neg_pow_sign(b_sgn, exp_den), b_r.pow(exp_den.try_into().unwrap()))
   }
 }
 
@@ -415,6 +414,7 @@ mod test_from_prod_simplify{
       // Π[(ξ5,1),(e,1),(ξ2,2),(π,1)] -> Σ(20,Π[(e,1),(π,1)])
     ];
     for (from, ans) in test_vec {
+      println!("trying {:?} ?= {}", from, ans);
       assert_eq!(Expr::from(from), ans);
     }
   }

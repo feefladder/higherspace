@@ -2,8 +2,16 @@ use crate::io::ParseDisplay;
 
 use super::*;
 
-mod prod;
+mod pvec;
+mod svec;
+pub use svec::*;
 use fraction::{One, Zero};
+
+pub trait FromRaw<T>: Sized {
+  /// Converts to this type from the input type.
+  #[must_use]
+  fn from_raw(value: T) -> Self;
+}
 
 impl One for Expr {
   fn one() -> Self {

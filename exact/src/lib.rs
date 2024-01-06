@@ -6,7 +6,8 @@ pub mod structs;
 pub mod io;
 pub use num::{One, Zero};
 
-pub type F = GenericFraction<u32>;
+pub type FType = u32;
+pub type F = GenericFraction<FType>;
 
 // pub use expr_rc::*;
 // pub struct Ring(HashSet<ExprLayer, RandomState>);

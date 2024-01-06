@@ -1,5 +1,8 @@
+use std::ops::{Deref, DerefMut};
+// use std::path::Display;
 use std::rc::Rc;
 use std::f64::consts::{PI,E};
+use std::fmt;
 
 use crate::{
   F,
@@ -7,19 +10,54 @@ use crate::{
   structs::{Const, Sum, Prod, Sqrt}
 };
 
+pub mod simplify;
+
 mod from;
-mod mul;
-mod add;
-mod inv;
+mod ops;
+mod num_traits;
+
+
 pub use from::*;
-pub use mul::*;
-pub use add::*;
-pub use inv::*;
+pub use ops::*;
+pub use num_traits::*;
 
 // #[derive(Debug, PartialEq, Clone)]
 // pub enum VOrRef {
 //   Val(F),
 //   Ref(Rc<Expr>),
+// }
+
+pub type PVec = Vec<(Expr,F)>;
+pub type SVec = Vec<(F,Expr)>;
+
+// pub struct  PVec(PVecT);
+// pub struct SVec(SVecT);
+
+// impl Deref for PVec {type Target = PVecT;fn deref(&self) -> &Self::Target {&self.0}}
+// impl DerefMut for PVec {fn deref_mut(&mut self) -> &mut Self::Target {&mut self.0}}
+// impl PVec {
+//   fn new() -> PVec {
+//     PVec(PVecT::new())
+//   }
+// }
+
+// impl Deref for SVec {type Target = SVecT;fn deref(&self) -> &Self::Target {&self.0}}
+// impl DerefMut for SVec {fn deref_mut(&mut self) -> &mut Self::Target {&mut self.0}}
+// impl SVec {
+//   fn new() -> SVec {
+//     SVec(SVecT::new())
+//   }
+// }
+
+
+// impl fmt::Display for PVec {
+//   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//     write!(f,"Π[");
+//     for (base, exp) in self {
+//       write!(f,"({},{}),", base, exp);
+//     }
+//     write!(f,"]");
+//   }
 // }
 
 /// Expression using Rc<T> This type does not know if there are duplicates

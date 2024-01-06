@@ -1,7 +1,10 @@
 use std::ops::Add;
 use num::{One, Zero};
 
-use super::*;
+use crate::{
+  F,
+  expr_rc::Expr
+};
 
 impl Add for Expr {
   type Output = Self;

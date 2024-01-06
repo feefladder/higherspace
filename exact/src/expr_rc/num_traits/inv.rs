@@ -4,7 +4,10 @@ pub use num_traits::Inv;
 use crate::{
   F,
   One,
-  expr_rc::Expr,
+  expr_rc::{
+    Expr,
+    FromRaw
+  }
 };
 
 impl Inv for Expr {
@@ -16,9 +19,13 @@ impl Inv for Expr {
           Expr::from(F::one()/f)
         },
         Expr::Prod(p) => {
-          todo!()
+          let mut v = p.factors.clone();
+          for (_,exp) in v.iter_mut() {
+            *exp*=F::from(-1);
+          }
+          Expr::from(v)
         }
-        _ => Expr::from(vec![(self, F::from(-1))])
+        _ => Expr::from_raw(vec![(self, F::from(-1))])
       }
   }
 }
