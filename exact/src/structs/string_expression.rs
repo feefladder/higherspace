@@ -1,4 +1,4 @@
-use crate::expr_field::{FlatField, self, FlatRef};
+// use crate::expr_field::{FlatField, self, FlatRef};
 
 /// an expression that can be parsed
 pub struct StrExpr {
@@ -13,5 +13,5 @@ pub struct StrExpr {
 ///        \-> [2π²,2π,π]
 pub enum StringOrField {
   Str(String),
-  Expr(expr_field::Expr<'static, FlatRef<'static>, FlatField<'static>>),
+  // Expr(expr_field::Expr<'static, FlatRef<'static>, FlatField<'static>>),
 }
