@@ -371,3 +371,37 @@ Implement a copyable Expr type using Field as factory:
   ```
 - [ ] 
 
+## Storing expr and ref always together is inefficient
+
+Not this:
+```rust
+enum Expr{
+  Sum(Ref, SVec)
+}
+
+struct FlatField{
+  exprs: Vec<Expr>
+}
+```
+but this
+```rust
+enum Expr{
+  Sum(Ref),
+  Prod(Ref),
+}
+
+struct TypeField{
+  vals: Vec<F>,
+  consts: Vec<Const>,
+  sums: Vec<SVec>,
+  prods: Vec<PVec>,
+  fns: Vec<ExprFn>,
+  // ...
+}
+```
+or this
+```rust
+enum Expr{
+  Sum(SVec)
+}
+```

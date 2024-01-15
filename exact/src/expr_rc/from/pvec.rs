@@ -1,9 +1,8 @@
-use std::{rc::Rc, ops::Deref, fmt::{Display, Debug}};
+use std::rc::Rc;
 
-use num_traits::{sign, PrimInt};
-use prime_factorization::{Factorization, UInt};
+use prime_factorization::Factorization;
 use fraction::{Sign, Ratio};
-use num::{Integer, integer::Roots};
+use num::Integer;
 
 use crate::{
   F,One,Zero,
@@ -18,7 +17,7 @@ use crate::{
       }
     }, PVec
   },
-  structs::Prod, FType,
+  expr_rc::structs::Prod, FType,
 };
 
 use super::FromRaw;
@@ -58,7 +57,10 @@ impl From<PVec> for Expr {
     // Prod+Sum: strip zeroes
     // Π(π,0) -> Π() -> ξ1
     // Σ(0,π) -> Σ() -> ξ1
-    v.retain(|(_,f)| f != &F::zero());
+    v.retain(|(_,f)| !f.is_zero());
+    if v.len() == 0 {
+      return Expr::val_i(coeff);
+    }
     // Sqrt magic
     // Π(12,1/2) -> 2 Π(3,1/2)
     // Π(24,1/3) -> 2 Π(3,1/3)
@@ -89,11 +91,11 @@ fn sqrt_to_power(v: &mut PVec) {
 /// Prod: expand prods (recursive)
 /// Π(Π[(π,1),(e,1)],1/3),(e,1)) -> Π[(π,1/3),(e,4/3)]
 /// First append: Π(Π[(π,1),(e,1)],1/3),(e,1),(π,1/3),(e,1/3))
-/// then filter: Π((e,1),(π,1/3),(e,1/3))    ^--------------^
+/// then retain: Π((e,1),(π,1/3),(e,1/3))    ^--------------^
 #[inline]
 fn sqrt_to_power_expand_prods(v: &mut PVec) {
   sqrt_to_power(v);
-  for (maybe_prod, exp) in v.clone().iter() {
+  for (maybe_prod, _) in v.clone().iter() {
     match maybe_prod {
       Expr::Prod(p) => {
         for (fact, exp) in p.as_ref().clone().factors {
@@ -152,8 +154,9 @@ fn factor_root(base: &mut Ratio<u32>, exp: &mut Ratio<u32>) -> F {
   let mut coeff = F::one();
   let mut f_num = Factorization::run(*base.numer()).prime_factor_repr();
   let mut f_den = Factorization::run(*base.denom()).prime_factor_repr();
-  // Π(54,1/2) -> 3 Π(6,1/2)
-  // f_num: [(2,1),(3,3)]
+  // Π(54,1/2) -> 3 Π(6,2/3)
+  // f_num: [(2,1),(3,3)] <- 54
+  // [(2,2),(3,6)]
   for (prime, p_exponent) in f_num.iter_mut() {
     let rem = (*p_exponent * exp.numer()) % exp.denom();
     let div = (*p_exponent * exp.numer()) / exp.denom();
@@ -183,17 +186,20 @@ fn neg_pow_sign<T: Integer>(sign: Sign, pow: T) -> Sign {
 }
 
 /// Take out values from the equation
+/// ```raw
 /// Π(ξ6,5/2) -> 36, Π(ξ6,1/2)
+/// Π(ξ8,1) -> 8, Π()
 /// also deals with infinity and zero:
 /// Π(ξ0,a)  ->  0(a!=∞) Nan(a==∞)
-/// Π(ξα,0)  ->  nothing special
+/// Π(ξα,0)  ->  1
 /// Π(ξa,∞)  ->  ∞(a>1) 0(a<1) nan(a=1)
 /// Π(ξa,-∞) ->  ∞(a<1) 0(a>1) nan(a=1)
 /// Π(ξ∞,a)  ->  ∞(a!=0) Nan(a==0)
 /// Π(ξ-∞,a) -> -∞(a!=0) Nan(a==0)
-/// also: ∞*0 and ∞*0 checks
+/// also: ∞*0 and ∞*0 checks:
 /// Π(1,∞) -> Nan  Π(∞,0) -> Nan
 /// Π()
+/// ```
 fn take_out_vals(vect: &mut PVec) -> F {
   println!("Taking vals: {:?}", vect);
   let mut coeff: F = F::one();
@@ -247,10 +253,10 @@ fn take_out_vals(vect: &mut PVec) -> F {
             let exp_int: i32 = exp_r
               .to_integer()
               .try_into().unwrap();
-            println!("Doing r^r: {:?}^{:?}", e_sign_i, exp_int);
+            println!("Doing r^r: {:?}^{:?}", fact_r, exp_int);
             let new_exp_frac:F = F::Rational(*exp_sign, exp_r.fract());
             let new_f_sign = neg_pow_sign(fact_sign, exp_int);
-            // coeff *= val_neg_exp_to_pos(exp_sign, &mut new_exp_frac, exp_denom, fact_r);
+            coeff *= F::Rational(new_f_sign, fact_r.pow(e_sign_i*exp_int));
             // Π(ξ2,-1/2) -> 1/2, Π(ξ2,1/2)
             // Π(ξ2,-1/2) -> ξ2.pow(2/1), Π(ξ2,1/2)
             // Π(ξ-2,-2/3) -/-> 2.pow(3/2) Π(ξ2,2/3)
@@ -272,7 +278,7 @@ fn take_out_vals(vect: &mut PVec) -> F {
 /// Π(ξ-2/5,-1/3) -> (-2/5).pow(3)* Π(ξ-2/5,1/3)
 pub fn div_by_root_to_f_times_root(base: F, exp:&mut F) -> F {
   match (base, exp) {
-    (F::Rational(b_sgn, b_r),F::Rational(e_sgn, e_r)) => {
+    (F::Rational(b_sgn, b_r),F::Rational(_, e_r)) => {
       if *e_r.numer() != 1 || b_sgn == Sign::Plus {
         F::one()
       } else {
@@ -302,6 +308,7 @@ fn div_by_root_to_f_times_root_raw(b_sgn:Sign, b_r: Ratio<FType>, exp_den: FType
 #[cfg(test)]
 mod test_from_prod_simplify{
   use super::*;
+  
   const i: u32 = 5;
 
   #[test]

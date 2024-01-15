@@ -2,8 +2,9 @@ use fraction::GenericFraction;
 // use std::collections::{HashSet, hash_map::RandomState};
 
 pub mod expr_rc;
-pub mod structs;
-pub mod io;
+pub mod expr_field;
+pub mod io_traits;
+
 pub use num::{One, Zero};
 
 pub type FType = u32;

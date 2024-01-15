@@ -3,8 +3,11 @@ use std::fmt::Display;
 
 // use super::*;
 use crate::{
-  expr_rc::{Expr, GetExpr},
-  io::{Char, scanner::Scanner},
+  io_traits::Char,
+  expr_rc::{
+    Expr, GetExpr,
+    io::{scanner::Scanner},
+  }
 };
 
 

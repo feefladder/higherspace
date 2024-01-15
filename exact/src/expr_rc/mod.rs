@@ -1,22 +1,20 @@
-use std::ops::{Deref, DerefMut};
-// use std::path::Display;
 use std::rc::Rc;
 use std::f64::consts::{PI,E};
-use std::fmt;
 
 use crate::{
   F,
   One,
-  structs::{Const, Sum, Prod, Sqrt}
+  expr_rc::structs::{Const, Sum, Prod, Sqrt}
 };
 
-pub mod simplify;
+
 
 mod from;
 mod ops;
 mod num_traits;
-
-
+pub mod structs;
+pub mod simplify;
+pub mod io;
 pub use from::*;
 pub use ops::*;
 pub use num_traits::*;

@@ -5,7 +5,7 @@ use petgraph::stable_graph::EdgeIndex;
 // use petgraph::adj::EdgeIndex;
 // use rusqlite::{Connection, Result};
 use regex::RegexSet;
-use fraction::{GenericFraction, ToPrimitive};
+use fraction::{GenericFraction, ToPrimitive, Fraction, Num};
 use ndarray_linalg::Determinant;
 
 use std::fmt::{Debug, Formatter, Display};
@@ -13,6 +13,7 @@ use std::process::{Command, Stdio, ExitStatus};
 use std::io::Write; // Import Write trait for write_all
 use std::convert::From;
 use std::f64::consts::PI;
+use std::str::FromStr;
 
 use petgraph::graph::{UnGraph, NodeIndex, Node};
 use petgraph::algo::{is_isomorphic_subgraph_matching, subgraph_isomorphisms_iter};
@@ -562,6 +563,25 @@ fn main() -> Result<(),()>{
   println!("pretty: {}, debug: {:?}, pretty debug: {:#?}",-f,f,f);
   println!("{}", (PI*5.0).sin());
 
+  let t_str: Vec<&str> = vec![
+    "10",
+    "10 and some text",
+    "0xdeadbeef",
+    ""
+  ];
+  for t in t_str {
+    println!("parsed string: '{}' to {:?}", t, t.to_string().parse::<u32>());
+  }
+
+  let t_str: Vec<&str> = vec![
+    "1/2",
+    "10 and some text",
+    "deadbeef",
+    ""
+  ];
+  for t in t_str {
+    println!("parsed string: '{}' to {:?}", t, t.parse::<Fraction>() );
+  }
   // use 
   // iso_map(&mut group.graph)?;
   // conn.execute(

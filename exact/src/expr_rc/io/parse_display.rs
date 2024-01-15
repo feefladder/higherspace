@@ -10,12 +10,14 @@ use lyn::Error;
 
 use crate::{
   F,
-  expr_rc::Expr,
-  structs::Const,
+  expr_rc::{
+    Expr,
+    structs::Const,
   io::{
     scanner::Scanner,
     traits::ParseDisplay,
   },
+}
 };
 
 

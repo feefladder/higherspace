@@ -268,7 +268,7 @@ impl Mul for Expr {
 mod test_e_rc_mul {
   use num::One;
   use super::*;
-  use crate::io::traits::ParseDisplay;
+  use crate::expr_rc::io::traits::ParseDisplay;
 
   // for laziness 
   // DO NOT CHANGE 

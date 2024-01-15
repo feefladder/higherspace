@@ -1,32 +1,15 @@
 use lyn::Error;
 
-use crate::expr_rc::Expr;
+use crate::{
+  io_traits::Char,
+  expr_rc::Expr
+};
 
 pub trait ParseDisplay {
   fn parse_display(input: String) -> Result<Expr, Error>;
 }
 
-/// Name of an Expr variant. Should return char
-/// Val  -> ξ
-/// Const -> <char of const>
-/// Sum  -> Σ
-/// Prod -> Π
-/// Sqrt -> √
-/// For sin, cos, tan, they are a clock based on this triangle:
-/// Cos   Sin   Tan
-/// ____
-/// |  /  /|    /|
-/// |-/  / |   / |
-/// |/  /\_|  /\_|
-/// Cos Sin Tan
-/// |/  /|  _|
-/// 🕑  🕢  🕘
-/// Sin  -> 🕢
-/// Cos  -> 🕑
-/// Tan  -> 🕘
-pub trait Char {
-  fn ch(&self) -> char;
-}
+
 
 /// Const -> <char of const>
 // impl Char for Const {

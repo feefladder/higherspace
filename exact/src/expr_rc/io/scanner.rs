@@ -13,8 +13,10 @@ use std::{
 use lyn::{Scanner as Sc, Error};
 
 use crate::{
-  structs::Const,
-  io::traits::Char,
+  io_traits::Char,
+  expr_rc::{
+    structs::Const,
+  }
 };
 
 pub struct Scanner{

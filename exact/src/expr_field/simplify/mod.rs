@@ -62,10 +62,10 @@ pub mod prod;
 pub mod sum;
 
 #[inline]
-pub fn collect_like<T: Clone>(vec: Vec<T>, mut fn_match: impl FnMut(&&mut T, T) -> bool, fn_add: impl Fn(&mut T,T)) -> Vec<T> {
+pub fn collect_like<T: Clone + Copy>(vec: Vec<T>, fn_match: impl Fn(T, T) -> bool, mut fn_add: impl FnMut(&mut T,T)) -> Vec<T> {
   let mut new_vec: Vec<T> = Vec::new();
   for item in vec {
-    match new_vec.iter_mut().find(|a|fn_match(a,item.clone())) {
+    match new_vec.iter_mut().find(|a|fn_match(**a,item)) {
       Some(matc) => {
         fn_add(matc, item);
       },

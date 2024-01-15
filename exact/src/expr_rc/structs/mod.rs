@@ -1,12 +1,20 @@
 // use std::rc::Rc;
 
 // TODO: generic Expr
-use crate::{F, expr_rc::Expr, io::{Char,ParseDisplay}};
+use crate::{F, 
+  io_traits::Char,
+  expr_rc::{
+    Expr,
+    io::ParseDisplay
+  }
+};
 
 // pub mod consts;
 // pub mod sqrt;
 // pub mod prod;
 
+// pub mod string_expression;
+// pub use string_expression::*; // as str_expr;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Const {

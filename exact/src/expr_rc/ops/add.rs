@@ -80,7 +80,7 @@ impl Add for Expr {
 #[cfg(test)]
 mod test_e_rc_add {
   use super::*;
-  use crate::io::ParseDisplay;
+  use crate::expr_rc::io::ParseDisplay;
 
   #[test]
   fn test_add_zero() {
