@@ -98,7 +98,7 @@ impl TryFrom<String> for Expr {
 
 #[cfg(test)]
 mod test_from {
-  use proptest::arbitrary::any;
+  // use proptest::arbitrary::any;
 
 use super::*;
   fn build_phi() -> Expr {

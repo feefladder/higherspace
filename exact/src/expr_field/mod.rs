@@ -1,33 +1,37 @@
 use fraction::Sign;
 // use appendlist::AppendList;
+use core::{
+  cell::Ref,
+  ops::{
+    Add,
+    // AddAssign,
+    // Neg,
+    // Sub,
+    // SubAssign,
+    Mul,
+    // MulAssign,
+    // Div,
+    // DivAssign
+  },
+};
 use std::{
-  cell::{OnceCell, Ref},
   fmt::{
     Debug,
     Display
   },
-  ops::{
-    Add,
-    AddAssign,
-    Neg,
-    Sub,
-    SubAssign,
-    Mul,
-    MulAssign,
-    Div,
-    DivAssign
-  },
+
+  cmp::Ordering, hash::Hash, ops::Deref
 };
-use num_traits::{
-  Zero,
-  One,
-  Inv,
-  Float,
-};
+// use num_traits::{
+//   Zero,
+//   One,
+//   Inv,
+//   Float,
+// };
 
 use crate::{
   F,
-  expr_field::structs::{Const,Prod,Sum}
+  expr_field::structs::{Const,Prod,Sum}, io_traits::Char
 };
 
 
@@ -75,6 +79,10 @@ where
   Fn(FieldRef<'a, Field>),
 }
 
+// impl<'a, Field: FieldTrait<'a>> Hash for Expr<'a, Field> {
+  
+// }
+
 impl<'a, Field: FieldTrait<'a>> Copy for Expr<'a, Field> {}
 impl<'a, Field: FieldTrait<'a>> Clone for Expr<'a, Field> {
   fn clone(&self) -> Self {
@@ -82,9 +90,38 @@ impl<'a, Field: FieldTrait<'a>> Clone for Expr<'a, Field> {
   }
 }
 
+impl<'a, Field: FieldTrait<'a>> Hash for Expr<'a, Field> {
+  fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    self.ch().hash(state);
+    match self {
+      Expr::Val(r) => {
+        Field::get_val(*r).hash(state)
+      },
+      Expr::Const(r) => {
+        Field::get_const(*r).hash(state)
+      },
+      Expr::Sum(r) => {
+        Field::get_sum(*r).deref().hash(state)
+      },
+      Expr::Prod(r) => {
+        Field::get_prod(*r).deref().hash(state)
+      },
+      Expr::Fn(r) => {
+        Field::get_fn(*r).inner().hash(state)
+      },
+      Expr::Infty(r, s) => {
+        s.hash(state);
+        // self.ch().hash(state)
+      },
+      // For the rest, hashing the ch() should be good enough
+      _ => {}
+    }
+  }
+}
+
 /// A reference to the field. On its own, it doesn't do anything.
-#[derive(Debug)]
-pub struct FieldRef<'a, Field> {
+#[derive(Debug, Eq)]
+pub struct FieldRef<'a, Field: FieldTrait<'a>> {
   field: &'a Field,
   index: usize,
 }
@@ -96,8 +133,16 @@ impl<'a, Field: FieldTrait<'a>> Clone for FieldRef<'a, Field> {
   }
 }
 
+/// very restrictive equality, pointer equality on the Field
+/// This prevents us from having to deep-compare the Field
+impl<'a, Field: FieldTrait<'a>> PartialEq for FieldRef<'a, Field> {
+  fn eq(&self, other: &Self) -> bool {
+    std::ptr::eq(self.field, other.field) && self.index == other.index
+  }
+}
+
 /// Float functions
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum ExprFn<'a, Field: FieldTrait<'a>>
 where{
   Sqrt(Expr<'a, Field>),
@@ -113,8 +158,39 @@ impl<'a, Field: FieldTrait<'a>> Clone for ExprFn<'a, Field> {
   }
 }
 
+impl<'a, Field: FieldTrait<'a>> PartialEq for ExprFn<'a, Field>
+{
+  fn eq(&self, other: &ExprFn<'a, Field>) -> bool {
+    // https://stackoverflow.com/a/32554326/14681457
+    if std::mem::discriminant(self) == std::mem::discriminant(other) {
+      self.inner() == other.inner()
+    } else {
+      false
+    }
+    // This would be needed if the two fields are different
+    // match (self, other) {
+    //   (ExprFn::Sqrt(_), ExprFn::Sqrt(_)) => self.inner() == other.inner(),
+    //   (ExprFn::Sin(_),ExprFn::Sin(_)) => self.inner() == other.inner(),
+    //   (ExprFn::Cos(_),ExprFn::Cos(_)) => self.inner() == other.inner(),
+    //   (ExprFn::Tan(_),ExprFn::Tan(_)) => self.inner() == other.inner(),
+    //   _ => false
+    // }
+  }
+}
+
+// impl<'a, Field: FieldTrait<'a>> Hash for ExprFn<'a, Field> {
+//   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//     self.ch().hash(state);
+//     self.inner().hash(state)
+//   }
+// }
 
 pub trait ExprFnTrait<'a, Field: FieldTrait<'a>>:
+  Debug +
+  Display + 
+  Clone +
+  Copy +
+  // PartialEq +
 {
   fn inner(&self) -> Expr<'a, Field>;
   fn set_inner(&mut self, e: Expr<'a, Field>);
@@ -145,7 +221,7 @@ pub trait FieldTrait<'a>:
   Sized +
   Debug +
   // Display +
-  PartialEq +
+  // PartialEq +
   // Eq
 {
   /// Create a new Field
@@ -153,11 +229,14 @@ pub trait FieldTrait<'a>:
   /// Add all elements of the expr to field
   fn gulp(&'a self, expr: Expr<'a, Self>) -> Expr<'a, Self>;
 
-  fn get_val(r: FieldRef<'a, Self>) -> &'a F;
-  fn get_const(r: FieldRef<'a, Self>) -> &'a Const;
-  fn get_sum(r: FieldRef<'a, Self>) -> &'a Sum<'a, Self>;
-  fn get_prod(r: FieldRef<'a, Self>) -> &'a Prod<'a, Self>;
-  fn get_fn(r: FieldRef<'a, Self>) -> &'a ExprFn<'a, Self>;
+  // Val, Const and ExprFn are Copy, so return directly
+  fn get_val(r: FieldRef<'a, Self>) -> F;
+  fn get_const(r: FieldRef<'a, Self>) -> Const;
+  fn get_fn(r: FieldRef<'a, Self>) -> ExprFn<'a, Self>;
+  // Sum and Prod have a Vec which we may not want to clone
+  fn get_sum(r: FieldRef<'a, Self>) -> Ref<Sum<'a, Self>>;
+  fn get_prod(r: FieldRef<'a, Self>) -> Ref<Prod<'a, Self>>;
+  
 
   /// Add a raw sum vector to the field. Should implement the following simplifications:
   /// ```raw
@@ -173,6 +252,9 @@ pub trait FieldTrait<'a>:
   /// Π[(ξv,1),...] -> Σ(v,Π[...]) <- this is ugly and adds unnecessary ξv to the field
   /// ```
   fn add_pvec(&'a self, p: PVec<'a, Self>) -> Expr<'a, Self>;
+  fn add_val(&'a self, v: F) -> Expr<'a, Self>;
+  fn add_const(&'a self, c: Const) -> Expr<'a, Self>;
+  fn add_fn(&'a self, f: ExprFn<'a, Self>) -> Expr<'a, Self>;
   // Add an expression <- should actually add a thingy, since expressions contain the ref already bla
   // fn add(expr)
   // get the index of an expression.
@@ -184,7 +266,7 @@ pub trait FieldTrait<'a>:
   // Get the index, append if it doesn't exist within this field
   // fn i_or_add(&self, expr: ExType) -> usize;
   // fn add(&self, expr: ExType) -> usize;
-  fn parse(input: &str) -> Expr<'a, Self>;
+  fn parse(&'a self, input: &str) -> Expr<'a, Self>;
 }
 
 pub trait ExprTrait<'a, Field: FieldTrait<'a>>:
@@ -193,7 +275,7 @@ pub trait ExprTrait<'a, Field: FieldTrait<'a>>:
   Copy +
   Debug +
   Display +
-  PartialEq +
+  // PartialEq +
   // Zero +
   // One +
   Add +
@@ -210,22 +292,46 @@ pub trait ExprTrait<'a, Field: FieldTrait<'a>>:
   // Float +
 {
   fn field(&self) -> &'a Field;
+  // fn get_ref(&self) -> &'a FieldRef<'a, Field>;
   // fn set_ref_to(&mut self, field: Field);
 }
 
-impl<'a, F1: FieldTrait<'a>, F2: FieldTrait<'a>> PartialEq<Expr<'a, F1>> for Expr<'a, F2> {
-  fn eq(&self, other: &Expr<'a, F1>) -> bool {
-    // if &self.field() == &other.field() && 
-    // match (self, other) {
-    //   (Expr::
-    // }
-    todo!()
-  }
-}
-
-impl<'a, Field: FieldTrait<'a>> Display for Expr<'a, Field> {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    todo!()
+impl<'a, Field: FieldTrait<'a>> Eq for Expr<'a, Field> {}
+impl<'a, Field: FieldTrait<'a>> PartialEq for Expr<'a, Field> where
+{
+  fn eq(&self, other: &Expr<'a, Field>) -> bool {
+    match (self, other) {
+      // "fundamentals"
+      (Expr::Zero(_), Expr::Zero(_)) => true,
+      (Expr::One(_), Expr::One(_)) => true,
+      //Nan != Nan, but we want Eq trait, so InDet == Indet
+      (Expr::InDet(_), Expr::InDet(_)) => true,
+      (Expr::Infty(_, s1), Expr::Infty(_, s2)) => {s1 == s2}
+      (Expr::Val(r1), Expr::Val(r2)) => {
+        Field::get_val(*r1) == Field::get_val(*r2)
+      },
+      (Expr::Const(r1), Expr::Const(r2)) => {
+        Field::get_const(*r1) == Field::get_const(*r2)
+      },
+      (Expr::Sum(r1), Expr::Sum(r2)) => {
+        if r1 == r2 {
+          true
+        } else {
+          *Field::get_sum(*r1) == *Field::get_sum(*r2)
+        }
+      },
+      (Expr::Prod(r1), Expr::Prod(r2)) => {
+        if r1 == r2 {
+          true
+        } else {
+          *Field::get_prod(*r1) == *Field::get_prod(*r2)
+        }
+      },
+      (Expr::Fn(r1), Expr::Fn(r2)) => {
+        Field::get_fn(*r1) == Field::get_fn(*r2)
+      }
+      _ => false
+    }
   }
 }
 
@@ -244,3 +350,15 @@ impl<'a, Field: FieldTrait<'a>> ExprTrait<'a, Field> for Expr<'a, Field> {
     }
   }
 }
+
+// impl<Field> Ord for Expr<'a, Field> {
+//   fn cmp(&self, other: &Self) -> Ordering {
+//     match (self, other) {
+//       (Expr::Infty(_, s1), Expr::Infty(_, s2)) => {
+//         if s1 == s2 { Ordering::Equal } else { s1 < s2 }
+//       }
+//       (Expr::Zero(_), Expr::Zero(_)) => Ordering::Equal,
+//       (Expr::)
+//     }
+//   }
+// }

@@ -1,8 +1,10 @@
-use std::ops::{
+use std::{ops::{
   Add,
   Mul,
-};
+}, collections::HashSet};
 // use std::rc::Rc;
+
+use core::hash::Hash;
 
 use num_traits::Zero;
 
@@ -24,6 +26,12 @@ use crate::expr_field::{
 //     Sum{ terms:
 //       collect_like_terms([self.terms,(F::one(), rhs)])
 //     }
+//   }
+// }
+
+// impl<'a, Field: FieldTrait<'a>> Hash for Sum<'a, Field> {
+//   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//     // self.terms.sort_unstable_by()
 //   }
 // }
 
@@ -90,5 +98,15 @@ impl<'a, Field: FieldTrait<'a>> Mul for Sum<'a, Field> {
     let mut res = collect_like_terms(v_new);
     res.retain(|(c,_)| !c.is_zero());
     Sum { terms:res}
+  }
+}
+
+impl<'a, Field: FieldTrait<'a>> PartialEq for Sum<'a, Field> {
+  fn eq(&self, other: &Sum<'a, Field>) -> bool {
+    let s: HashSet<_> = self.terms.iter().collect();
+    let o: HashSet<_> = other.terms.iter().collect();
+    s == o
+    // self.terms.unordered_eq(&other.terms)
+    // todo!()
   }
 }

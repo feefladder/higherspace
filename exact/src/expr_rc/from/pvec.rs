@@ -273,9 +273,11 @@ fn take_out_vals(vect: &mut PVec) -> F {
   coeff
 }
 
+/// ```raw
 /// Π(ξ2,-1/2) -> 1/2, Π(ξ2,1/2)
 /// Π(ξ2,-1/2) -> ξ2.pow(2/1)* Π(ξ2,1/2)
 /// Π(ξ-2/5,-1/3) -> (-2/5).pow(3)* Π(ξ-2/5,1/3)
+/// ```
 pub fn div_by_root_to_f_times_root(base: F, exp:&mut F) -> F {
   match (base, exp) {
     (F::Rational(b_sgn, b_r),F::Rational(_, e_r)) => {

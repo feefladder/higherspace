@@ -1,5 +1,6 @@
-use num_traits::One;
-use appendlist::AppendList;
+use num_traits::{One, Zero};
+use core::cell::{RefCell, Ref};
+// use appendlist::AppendList;
 use crate::expr_field::{
   Expr, F,
   FieldRef,
@@ -8,7 +9,7 @@ use crate::expr_field::{
     Const,
     Sum,
     Prod,
-  }, PVec
+  }, PVec, io::parse_display::{Scanner, pd_expr}
 };
 
 pub type TypeRef<'a> = FieldRef<'a, TypeField<'a>>;
@@ -16,25 +17,28 @@ pub type TypeExpr<'a> = Expr<'a, TypeField<'a>>;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct TypeField<'a>{
-  vals: AppendList<F>,
-  consts: AppendList<Const>,
-  sums: AppendList<Sum<'a, Self>>,
-  prods: AppendList<Prod<'a, Self>>,
-  fns: AppendList<ExprFn<'a, Self>>,
+  vals: RefCell<Vec<F>>,
+  consts: RefCell<Vec<Const>>,
+  sums: RefCell<Vec<Sum<'a, Self>>>,
+  prods: RefCell<Vec<Prod<'a, Self>>>,
+  fns: RefCell<Vec<ExprFn<'a, Self>>>,
 }
 
 impl<'a> TypeField<'a> {
   #[inline]
-  fn maybe_add<T: PartialEq>(v: &AppendList<T>, t: T) -> usize {
-    match v.iter().position(|a_t| *a_t == t) {
+  pub fn maybe_add<T: PartialEq>(v: &RefCell<Vec<T>>, t: T) -> usize {
+    let index: Option<usize> ;
+    {
+      index = v.borrow().iter().position(|a_t| *a_t == t)
+    }
+    match index {
       Some(i) => i,
       None => {
-        v.push(t);
-        v.len()-1
+        v.borrow_mut().push(t);
+        v.borrow().len()-1
       }
     }
   }
-
 }
 
 impl<'a> FieldTrait<'a> for TypeField<'a> {
@@ -43,28 +47,42 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
   // }
 
   #[inline]
-  fn get_val(r: FieldRef<'a, Self>) -> &'a F {
-    &r.field.vals[r.index]
+  fn get_val(r: FieldRef<'a, Self>) -> F {
+    r.field.vals.borrow()[r.index]
   }
 
   #[inline]
-  fn get_const(r: FieldRef<'a, Self>) -> &'a Const {
-    &r.field.consts[r.index]
+  fn get_const(r: FieldRef<'a, Self>) -> Const {
+    r.field.consts.borrow()[r.index]
   }
 
   #[inline]
-  fn get_sum(r: FieldRef<'a, Self>) -> &'a Sum<'a, Self> {
-    &r.field.sums[r.index]
+  fn get_sum(r: FieldRef<'a, Self>) -> Ref<'a, Sum<'a, Self>> {
+    Ref::map(r.field.sums.borrow(), |v| &v[r.index])
   }
 
   #[inline]
-  fn get_prod(r: FieldRef<'a, Self>) -> &'a Prod<'a,   Self> {
-    &r.field.prods[r.index]
+  fn get_prod(r: FieldRef<'a, Self>) -> Ref<'a, Prod<'a,   Self>> {
+    Ref::map(r.field.prods.borrow(), |v| &v[r.index])
   }
 
   #[inline]
-  fn get_fn(r: FieldRef<'a, Self>) -> &'a ExprFn<'a, Self> {
-    &r.field.fns[r.index]
+  fn get_fn(r: FieldRef<'a, Self>) -> ExprFn<'a, Self> {
+    r.field.fns.borrow()[r.index].clone()
+  }
+
+  fn add_val(&'a self, v: F) -> Expr<'a, Self> {
+    if v.is_one() {
+      TypeExpr::One(self)
+    } else if v.is_zero() {
+      TypeExpr::Zero(self)
+    } else {
+      TypeExpr::Val(FieldRef{field: self, index: TypeField::maybe_add(&self.vals, v)})
+    }
+  }
+
+  fn add_const(&'a self, c: Const) -> Expr<'a, Self> {
+    TypeExpr::Const(FieldRef{field: self, index: TypeField::maybe_add(&self.consts, c)})
   }
 
   fn add_svec(&'a self, s: SVec<'a, Self>) -> Expr<'a, Self> {
@@ -96,6 +114,10 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
         index: TypeField::maybe_add(&self.prods, Prod { factors: p}) }
       )
     }
+  }
+
+  fn add_fn(&'a self, f: ExprFn<'a, Self>) -> Expr<'a, Self> {
+    Expr::Fn(FieldRef { field: self, index: TypeField::maybe_add(&self.fns, f) })
   }
 
   fn gulp(&'a self, expr: TypeExpr<'a>) -> TypeExpr<'a>{
@@ -139,7 +161,7 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
             field: self,
             index: TypeField::maybe_add(
               &self.vals,
-              r.field.vals[r.index]
+              TypeField::get_val(r)
             )
           })
         },
@@ -148,7 +170,7 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
             field: self,
             index: TypeField::maybe_add(
               &self.consts,
-              r.field.consts[r.index].clone()
+              TypeField::get_const(r)
             )
           })
         },
@@ -161,8 +183,9 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
     }
   }
 
-  fn parse(input: &str) -> Expr<'a, Self> {
-      todo!()
+  fn parse(&'a self, input: &str) -> Expr<'a, Self> {
+    let mut sc = Scanner::new(input, self);
+    pd_expr(&mut sc)
   }
 }
 
@@ -182,3 +205,30 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
 //     }
 //   }
 // }
+
+#[cfg(test)]
+mod test_typefield
+{
+    use ordered_float::NotNan;
+
+    use crate::expr_field::structs::Const;
+
+    use super::TypeField;
+
+  #[test]
+  fn test_typefield_maybe_add() {
+    let f = TypeField::default();
+    assert_eq!(TypeField::maybe_add(
+      &f.consts,
+      Const{ch: 'π', ascii: "pi", f64: NotNan::new(core::f64::consts::PI).unwrap()}
+    ), 0);
+    assert_eq!(TypeField::maybe_add(
+      &f.consts,
+      Const{ch: 'π', ascii: "pi", f64: NotNan::new(core::f64::consts::PI).unwrap()}
+    ), 0);
+    assert_eq!(TypeField::maybe_add(
+      &f.consts,
+      Const{ch: 'e', ascii: "pi", f64: NotNan::new(core::f64::consts::E).unwrap()}
+    ), 1);
+  }
+}

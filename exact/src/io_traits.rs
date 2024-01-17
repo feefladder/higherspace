@@ -1,3 +1,5 @@
+use lyn::Scanner as Sc;
+
 /// Name of an Expr variant. Should return char
 /// Val  -> ξ
 /// Const -> <char of const>

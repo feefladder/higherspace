@@ -1,16 +1,15 @@
-
+use std::collections::HashSet;
 use crate::expr_field::{structs::Prod, FieldTrait};
 
+use super::UnorderedEq;
+
+impl<'a, Field: FieldTrait<'a>> Eq for Prod<'a, Field> {}
 impl<'a, Field: FieldTrait<'a>> PartialEq for Prod<'a, Field> {
-  fn eq(&self, other: &Self) -> bool {
-    // this is ugly
-    for i in self.factors.clone() {
-      if !other.factors.contains(&i) {return false;}
-    }
-    for i in other.factors.clone() {
-      if !self.factors.contains(&i) {return false;}
-    }
-    true
+  fn eq(&self, other: &Prod<'a, Field>) -> bool {
+    // self.factors.unordered_eq(&other.factors)
+    let s: HashSet<_> = self.factors.iter().collect();
+    let o: HashSet<_> = other.factors.iter().collect();
+    s == o
   }
 }
 

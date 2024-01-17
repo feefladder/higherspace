@@ -1,8 +1,9 @@
 use num_traits::Zero;
 
-use crate::expr_field::{SVec, ExprTrait, FieldTrait, Expr};
-
-use super::collect_like;
+use crate::expr_field::{
+  SVec, FieldTrait,
+  simplify::collect_like,
+};
 
 /// Collect like terms in a sum. Also removes empty terms
 /// ```raw
