@@ -23,7 +23,29 @@ impl<
       },
       (Expr::Infty(_, _), _) => {self},
       (_, Expr::Infty(_, _)) => {rhs_field},
-      // (Expr::Val(r, vs), Expr::Val(_, vr)) => {Expr::Val(r, vs+vr)},
+      (Expr::Val(rs), Expr::Val(rr)) => {
+        self.field().add_val(Field::get_val(rs) + Field::get_val(rr))
+      },
+      (Expr::Val(rs),Expr::One(_)) => {
+        self.field().add_val(Field::get_val(rs) + F::one())
+      }
+      (Expr::One(_),Expr::Val(rr)) => {
+        rhs.field().add_val(Field::get_val(rr) + F::one())
+      }
+      (Expr::Val(rs),Expr::Sum(rr)) => {
+        let mut sv = Field::get_sum(rr).terms.clone();
+        sv.push((Field::get_val(rs),Expr::One(rs.field)));
+        rs.field.add_svec(collect_like_terms(
+          sv
+        ))
+      }
+      (Expr::Sum(rs),Expr::Val(rr)) => {
+        let mut sv = Field::get_sum(rs).terms.clone();
+        sv.push((Field::get_val(rr),Expr::One(rs.field)));
+        rs.field.add_svec(collect_like_terms(
+          sv
+        ))
+      }
       // (Expr::Val(r, vs),Expr::Const(_, ))
       (Expr::Sum(r_s),Expr::Sum(r_r)) => {
         self.field().add_svec(
@@ -49,6 +71,70 @@ impl<
         let res = collect_like_terms(vec![(F::one(), self), (F::one(), rhs_field)]);
         self.field().add_svec(res)
       }
+    }
+  }
+}
+
+#[cfg(test)]
+mod test_expr_field_add
+{
+  use super::*;
+  use crate::expr_field::structs::type_field::TypeField;
+
+  #[test]
+  fn test_add_zero() {
+    let f = TypeField::default();
+    let tv: Vec<_> = vec![
+      ("I", "O", "I"),
+      ("I","-1", "O"),
+      ("π", "O", "π"),
+      ("π","Σ(-1,π)", "O"),
+      ("Σ[(1,I),(1,π)]","ξ-1","π"),
+      ("Σ[(1,I),(1,π)]","Σ(-1,π)","I"),
+    ].iter().map(|(a,b,ans)|(f.parse(a),f.parse(b),f.parse(ans))).collect();
+    // assert_eq!(Ok(Expr::from(Vec::<(F,Expr)>::new())),f.parse(""));
+    for (a,b ,ans) in tv {
+      println!("testing {}+{}={}",a,b,ans);
+      assert_eq!(a + b , ans);
+      println!("testing {}+{}={}",b,a,ans);
+      assert_eq!(b + a , ans);
+    }
+  }
+
+  #[test]
+  fn test_val_plus_val() {
+    let f = TypeField::default();
+    let test_vec: Vec<(&str,&str,&str)> = vec![
+      ("I", "I", "ξ2"),
+      ("I", "ξ3", "ξ4"),
+    ];
+    for (a,b ,ans) in test_vec {
+      let e_a   = f.parse(  a);
+      let e_b   = f.parse(  b);
+      let e_ans = f.parse(ans);
+      println!("{}+{}={}",a,b,ans);
+      println!("{}+{}={}",e_a,e_b,e_ans);
+      assert_eq!(e_a + e_b , e_ans);
+      println!("{}+{}={}",b,a,ans);
+      println!("{}+{}={}",e_b,e_a,e_ans);
+      assert_eq!(e_b + e_a , e_ans);
+    }
+  }
+
+
+  #[test]
+  fn test_val_plus_sum() {
+    let f = TypeField::default();
+    let test_vec: Vec<(&str,&str,&str)> = vec![
+      // ("ξ2", "Σ(3,π)", "Σ[(3,π),(2,I)]"),
+      // ("ξ2", "Σ[(3,π),(2,I)]", "Σ[(3,π),(4,I)]"),
+    ];
+    for (a,b ,ans) in test_vec {
+      let e_a   = f.parse(  a);
+      let e_b   = f.parse(  b);
+      let e_ans = f.parse(ans);
+      assert_eq!(e_a + e_b , e_ans);
+      assert_eq!(e_b + e_a , e_ans);
     }
   }
 }

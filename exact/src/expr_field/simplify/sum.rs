@@ -2,7 +2,7 @@ use num_traits::Zero;
 
 use crate::expr_field::{
   SVec, FieldTrait,
-  simplify::collect_like,
+  simplify::collect_like, structs::sum::sort_svec,
 };
 
 /// Collect like terms in a sum. Also removes empty terms
@@ -14,6 +14,7 @@ pub fn collect_like_terms<'a, Field: FieldTrait<'a>> (v: SVec<'a, Field>) -> SVe
     |(_,e1),(_,e2)| e1 == e2,
     |(f1,_),(f2,_)| *f1+=f2);
   res.retain(|(c,_)| !c.is_zero());
+  sort_svec(&mut res);
   res
 }
 

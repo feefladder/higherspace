@@ -15,7 +15,7 @@ use crate::expr_field::{
 pub type TypeRef<'a> = FieldRef<'a, TypeField<'a>>;
 pub type TypeExpr<'a> = Expr<'a, TypeField<'a>>;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default)]
 pub struct TypeField<'a>{
   vals: RefCell<Vec<F>>,
   consts: RefCell<Vec<Const>>,
@@ -76,6 +76,13 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
       TypeExpr::One(self)
     } else if v.is_zero() {
       TypeExpr::Zero(self)
+    } else if v.is_nan() {
+      TypeExpr::InDet(self)
+    } else if v.is_infinite() {
+      match v.sign() {
+        Some(s) => {TypeExpr::Infty(self, s)}
+        _ => unreachable!()
+      }
     } else {
       TypeExpr::Val(FieldRef{field: self, index: TypeField::maybe_add(&self.vals, v)})
     }
@@ -97,6 +104,8 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
           index: TypeField::maybe_add(&self.vals, s[0].0)
         })
       }
+    } else if s.len() == 1 && s[0].0 == F::one() {
+      self.gulp(s[0].1)
     } else {
       Expr::Sum(FieldRef{
         field: self,
@@ -109,6 +118,7 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
     if p.len() == 0 {
       Expr::One(self)
     } else {
+      // assert!(p.is_sorted());
       Expr::Prod(FieldRef { 
         field: self,
         index: TypeField::maybe_add(&self.prods, Prod { factors: p}) }
@@ -121,7 +131,7 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
   }
 
   fn gulp(&'a self, expr: TypeExpr<'a>) -> TypeExpr<'a>{
-    if &expr.field() == &self {
+    if std::ptr::eq(expr.field(), self) {
       //all done!
       expr
     } else {
@@ -211,9 +221,7 @@ mod test_typefield
 {
     use ordered_float::NotNan;
 
-    use crate::expr_field::structs::Const;
-
-    use super::TypeField;
+    use crate::expr_field::{structs::{Const, type_field::TypeField}, FieldTrait};
 
   #[test]
   fn test_typefield_maybe_add() {
@@ -230,5 +238,55 @@ mod test_typefield
       &f.consts,
       Const{ch: 'e', ascii: "pi", f64: NotNan::new(core::f64::consts::E).unwrap()}
     ), 1);
+  }
+
+  #[test]
+  fn test_typeexpr_partialeq() {
+    let f = TypeField::default();
+    let tv = vec![
+      ("I","1"),
+      ("O","0"),
+      // I expected this to not work
+      ("Σ(2,π)","Σ(2,π)"),
+      ("Σ[(1,I),(1,π)]","Σ[(1,I),(1,π)]"),
+      ("Σ[(1,π),(1,I)]","Σ[(1,π),(1,I)]"),
+      // ("Σ[(1,π),(1,I)]","Σ[(1,I),(1,π)]"),
+      ("Π(π,2)","Π(π,2)"),
+      ("Π[(π,1),(e,1)]","Π[(π,1),(e,1)]"),
+      ("Π[(π,1),(e,1)]","Π[(e,1),(π,1)]"),
+    ];
+    for (t, res) in tv {
+      println!("testing eq for {}=?{}",f.parse(t),f.parse(res));
+      assert_eq!(format!("{}",f.parse(t)),format!("{}",f.parse(res)))
+    }
+    // assert!(false)
+  }
+
+
+  #[test]
+  fn test_typeexpr_partialeq_2fields() {
+    let f1 = TypeField::default();
+    let f2 = TypeField::default();
+    let tv = vec![
+      ("I","I"),
+      ("O","O"),
+      ("O","0"),
+      ("I","1"),
+      ("2","2"),
+      ("π","π"),
+      ("Σ(2,π)","Σ(2,π)"),
+      ("Σ[(1,π),(1,I)]","Σ[(1,π),(1,I)]"),
+      ("Σ[(1,π),(1,I)]","Σ[(1,I),(1,π)]"),
+      ("Π(π,2)","Π(π,2)"),
+      ("Π[(π,1),(e,1)]","Π[(π,1),(e,1)]"),
+      ("Π[(π,1),(e,1)]","Π[(e,1),(π,1)]"),
+      ("Σ(2,Π[(π,1),(e,1)])","Σ(2,Π[(e,1),(π,1)])"),
+      ("Σ(2,Π[(π,2),(e,1)])","Σ(2,Π[(e,1),(π,2)])"),
+    ];
+    for (t, res) in tv {
+      println!("testing eq for {}=?{}",t,res);
+      println!("testing eq for {}=?{}",f1.parse(t),f2.parse(res));
+      assert_eq!(f1.parse(t),f2.parse(res))
+    }
   }
 }

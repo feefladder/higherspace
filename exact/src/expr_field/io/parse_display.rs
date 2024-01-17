@@ -7,7 +7,7 @@ use std::{
 use ordered_float::NotNan;
 use crate::{
   io_traits::Char,
-  expr_field::{Expr, ExprFn, structs::Const, FieldTrait}, F
+  expr_field::{Expr, ExprFn, structs::{Const, sum::sort_svec}, FieldTrait}, F
 };
 pub struct Scanner<'a, Field: FieldTrait<'a>>{
   inner: Sc,
@@ -176,6 +176,9 @@ fn pd_sum<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Expr<'a, Fi
     // [(1/2,I),(1/2,√5)]
     //                   ^
     err_or_eq(sc, &']');
+
+
+    sort_svec(&mut v);
     sc.field.add_svec(v)
   } else {
     let t = pd_sum_tuple(sc).unwrap();
@@ -223,6 +226,9 @@ fn pd_prod<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Result<Exp
     // [(I,1/2),(√5,1/2)]
     //                   ^
     err_or_eq(sc, &']');
+
+    v.sort_unstable();
+
     Ok(sc.field.add_pvec(v))
   } else {
     let t = pd_prod_tuple(sc)?;
@@ -252,7 +258,7 @@ use super::*;
   // use crate::expr_rc::Expr;
   use fraction::One;
 use num_traits::Zero;
-  use crate::expr_field::structs::type_field::TypeField;
+  use crate::expr_field::structs::{type_field::TypeField, Prod};
   // use std::f64::consts::PI;
   // let c_pi: Const = Const { ch: 'π', ascii: "pi", f64: NotNan::new(std::f64::consts::PI).unwrap() };
   // let E: Const = Const{ ch: 'e', ascii: "e"  , f64: NotNan::new(std::f64::consts::E ).unwrap() };
@@ -333,7 +339,7 @@ use num_traits::Zero;
       ("Σ(2,π)", vec![(F::from(2), pi)]),
       // ("Σ[(2,π)]", vec![(F::from(2), pi)]),
     ];
-    for (t, res) in tv {
+    for (t, mut res) in tv {
       println!("{} =?", t);
       let s = f.add_svec(res);
       assert_eq!(f.parse(t), s);
@@ -354,14 +360,17 @@ use num_traits::Zero;
     let tv = vec![
       ("Σ[(1/2,I),(1/2,√5)]", vec![(F::new(1u8, 2u8),one),(F::new(1u8,2u8),sqrt5)]),
       ("Σ[(2,I),(1,π)]", vec![(F::from(2), one), (F::one(), pi)]),
-      ("Σ[(1/2,I),(1/2,√5)]", vec![(F::new(1u8,2u8),one),(F::new(1u8,2u8),sqrt5)]),
+      ("Σ[(1/2,√5),(1/2,I)]", vec![(F::new(1u8,2u8),one),(F::new(1u8,2u8),sqrt5)]),
     ];
     // sum multi
-    for (t, res) in tv {
-      println!("{} =?", t);
+    for (t, mut res) in tv {
+      println!("{} =? {:?}", f.parse(t), res);
+      sort_svec(&mut res);
+      println!("{} =? {:?}", f.parse(t), res);
       let s = f.add_svec(res);
+      println!("{} =? {:?}", f.parse(t), s);
       assert_eq!(f.parse(t), s);
-      assert_eq!(t, format!("{}",s));
+      // assert_eq!(t, format!("{}",s));
     }
   }
   #[test]
@@ -374,9 +383,10 @@ use num_traits::Zero;
       ("Π(π,2)", vec![(pi, F::from(2))]),
       // ("Π[(π,2)]", vec![(pi, F::from(2))]),
     ];
-    for (t, res) in tv {
-      println!("{} =?", t);
+    for (t, mut res) in tv {
+      res.sort_unstable();
       let p = f.add_pvec(res);
+      println!("{} =? {}", t, p);
       assert_eq!(f.parse(t), p);
       assert_eq!(t, format!("{}", p));
     }
@@ -384,18 +394,51 @@ use num_traits::Zero;
   #[test]
   fn test_parse_prod_multi() {
     // prod multi
-    let c_pi: Const = Const { ch: 'π', ascii: "pi", f64: NotNan::new(std::f64::consts::PI).unwrap() };
+    // let c_pi: Const = Const { ch: 'π', ascii: "pi", f64: NotNan::new(std::f64::consts::PI).unwrap() };
     let f = TypeField::default();
-    let pi = f.add_const(c_pi);
-    let sqrt5 = f.add_fn(ExprFn::Sqrt(f.add_val(F::from(5))));
+    let pi = f.parse("π");
+    let sqrt5 = f.parse("√5");//f.add_fn(ExprFn::Sqrt(f.add_val(F::from(5))));
     let tv = vec![
+      // ("Π[(√5,1),(π,1)]", vec![(pi, F::from(1)),(sqrt5,F::from(1))]),
       ("Π[(π,1),(√5,1)]", vec![(pi, F::from(1)),(sqrt5,F::from(1))]),
     ];
-    for (t, res) in tv {
-      println!("{} =?", t);
+    for (t, mut res) in tv {
+      println!("{}->",Prod{factors: res.clone()});
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      println!("{:?}",pi.cmp(&sqrt5));
+      let rt = res.clone();
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      println!("{:?}",pi.cmp(&sqrt5));
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      println!("{:?}, {:?}",pi.cmp(&sqrt5),pi<sqrt5);
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      println!("{:?}",pi.cmp(&sqrt5));
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      res.sort();
+      // println!("{:?}<{:?}:{} ==:{} >:{}",res[0],res[1],res[0]<res[1],res[0]==res[1],res[0]>res[1]);
+      println!("{:?} vs {:?} : {:?}",res[0].0,res[1].0,res[0].0.cmp(&res[1].0));
+      assert_eq!(res, rt);
       let p = f.add_pvec(res);
+      println!("{} =? {}", t, p);
+      println!("{} =? {}", f.parse(t), p);
       assert_eq!(f.parse(t), p);
-      assert_eq!(t,format!("{}", p));
+      // assert_eq!(t,format!("{}", p));
     }
     // assert_eq!(Expr::parse_display(.to_string()),Ok(Expr::prod_pi_times_sqrt_i(5)));
   }

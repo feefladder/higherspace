@@ -1,21 +1,22 @@
-use std::collections::HashSet;
 use crate::expr_field::{structs::Prod, FieldTrait};
-
-use super::UnorderedEq;
 
 impl<'a, Field: FieldTrait<'a>> Eq for Prod<'a, Field> {}
 impl<'a, Field: FieldTrait<'a>> PartialEq for Prod<'a, Field> {
+  #[inline]
   fn eq(&self, other: &Prod<'a, Field>) -> bool {
-    // self.factors.unordered_eq(&other.factors)
-    let s: HashSet<_> = self.factors.iter().collect();
-    let o: HashSet<_> = other.factors.iter().collect();
-    s == o
+    self.factors == other.factors
   }
 }
 
-// impl Mul<Prod> for Prod {
-//   type Output = Rc<Expr>;
-//   fn mul(self, rhs: Prod) -> Rc<Expr> {
-      
-//   }
-// }
+impl <'a, Field: FieldTrait<'a>> PartialOrd for Prod<'a, Field> {
+  #[inline(always)]
+  fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    Some(self.cmp(other))
+  }
+}
+impl <'a, Field: FieldTrait<'a>> Ord for Prod<'a, Field> {
+  #[inline(always)]
+  fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    self.factors.cmp(&other.factors)
+  }
+}

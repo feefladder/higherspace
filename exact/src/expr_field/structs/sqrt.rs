@@ -3,7 +3,7 @@ use std::ops::{Mul, Add};
 
 use crate::enums::{F, Expr, VOrRef};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Sqrt(VOrRef);
 
 

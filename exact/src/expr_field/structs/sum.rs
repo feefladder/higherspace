@@ -14,6 +14,11 @@ use crate::expr_field::{
   simplify::sum::collect_like_terms,
 };
 
+#[inline]
+pub fn sort_svec<A: Ord,B: Ord>(v: &mut Vec<(A,B)>) {
+  v.sort_unstable_by(|(a1,b1),(a2,b2)| (b1,a1).cmp(&(b2,a2)))
+}
+
 // /// Add a Const to this sum. Works on the vector.
 // /// Does not check which field the Const belongs to
 // /// ```raw
@@ -78,7 +83,7 @@ impl<'a, Field: FieldTrait<'a>> Add for Sum<'a, Field> {
 /// assert_eq!(f,vec!["π","Σ(2,π)","Π(π,2)","Σ(4,Π(π,2))"])
 /// ```
 /// MAY return a value: `Σ(v,I)`
-impl<'a, Field: FieldTrait<'a>> Mul for Sum<'a, Field> {
+impl<'a, Field> Mul for Sum<'a, Field> {
   type Output = Self;
   fn mul(self, rhs: Self) -> Self::Output {
     let v_s = self.terms;
@@ -101,12 +106,55 @@ impl<'a, Field: FieldTrait<'a>> Mul for Sum<'a, Field> {
   }
 }
 
+
+
+impl<'a, Field: FieldTrait<'a>> Eq for Sum<'a, Field> {}
 impl<'a, Field: FieldTrait<'a>> PartialEq for Sum<'a, Field> {
+  #[inline(always)]
   fn eq(&self, other: &Sum<'a, Field>) -> bool {
-    let s: HashSet<_> = self.terms.iter().collect();
-    let o: HashSet<_> = other.terms.iter().collect();
-    s == o
+    self.terms == other.terms
     // self.terms.unordered_eq(&other.terms)
     // todo!()
+  }
+}
+
+impl<'a, Field: FieldTrait<'a>> PartialOrd for Sum<'a, Field> {
+  fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    Some(self.cmp(other))
+  }
+}
+/// We actually want to overwrite Ord for the tuple (F, Expr)
+/// so that it first compares Expr and then F if Expr1==Expr2
+impl<'a, Field: FieldTrait<'a>> Ord for Sum<'a, Field> {
+  fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    if self.terms.len() == other.terms.len() {
+      self.terms.iter()
+        .map(|(a,b)| (b,a))
+        .cmp(
+          other.terms.iter().map(|(a,b)| (b,a))
+        )
+    } else {
+      self.terms.len().cmp(&other.terms.len())
+    }
+  }
+}
+
+#[cfg(test)]
+mod test_sum {
+    use crate::{F,One,expr_field::{structs::type_field::TypeField, FieldTrait}};
+
+    use super::sort_svec;
+
+
+  #[test]
+  fn test_sort_svec() {
+    let f = TypeField::default();
+    let tv = vec![
+      (vec![(F::one(),f.parse("π")),(F::one(),f.parse("I"))],vec![(F::one(),f.parse("I")),(F::one(),f.parse("π"))]),
+    ];
+    for (mut a,b) in tv {
+      sort_svec(&mut a);
+      assert_eq!(a,b);
+    }
   }
 }

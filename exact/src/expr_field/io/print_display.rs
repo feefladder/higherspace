@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, Debug};
 use crate::{
   expr_field::{
     Sign,
@@ -23,19 +23,33 @@ fn fmt_tuple_vec<A: Display, B: Display>(v: &Vec<(A,B)>, f: &mut std::fmt::Forma
   }
 }
 
-/// bla
+impl<'a, Field: FieldTrait<'a>> Debug for Sum<'a, Field> {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self)
+  }
+}
 impl <'a, F: FieldTrait<'a>> Display for Sum<'a, F>{
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     fmt_tuple_vec(&self.terms, f)
   }
 }
 
+impl<'a, Field: FieldTrait<'a>> Debug for Prod<'a, Field> {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self)
+  }
+}
 impl<'a, F: FieldTrait<'a>> Display for Prod<'a, F> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     fmt_tuple_vec(&self.factors, f)
   }
 }
 
+impl<'a, Field: FieldTrait<'a>> Debug for ExprFn<'a, Field> {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self)
+  }
+}
 impl<'a, Field: FieldTrait<'a>> Display for ExprFn<'a, Field> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self.inner() {
@@ -47,6 +61,11 @@ impl<'a, Field: FieldTrait<'a>> Display for ExprFn<'a, Field> {
   }
 }
 
+impl<'a, Field: FieldTrait<'a>> Debug for Expr<'a, Field> {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self)
+  }
+}
 impl<'a, Field: FieldTrait<'a>> Display for Expr<'a, Field> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
