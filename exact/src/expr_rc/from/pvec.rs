@@ -89,9 +89,11 @@ fn sqrt_to_power(v: &mut PVec) {
 }
 
 /// Prod: expand prods (recursive)
+/// ```raw
 /// Π(Π[(π,1),(e,1)],1/3),(e,1)) -> Π[(π,1/3),(e,4/3)]
 /// First append: Π(Π[(π,1),(e,1)],1/3),(e,1),(π,1/3),(e,1/3))
 /// then retain: Π((e,1),(π,1/3),(e,1/3))    ^--------------^
+/// ```
 #[inline]
 fn sqrt_to_power_expand_prods(v: &mut PVec) {
   sqrt_to_power(v);

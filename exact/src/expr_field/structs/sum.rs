@@ -1,17 +1,20 @@
-use std::{ops::{
+use std::{
+  cell::Ref,
+  ops::{
   Add,
   Mul,
-}, collections::HashSet};
-// use std::rc::Rc;
-
-use core::hash::Hash;
+}};
 
 use num_traits::Zero;
 
-use crate::expr_field::{
-  FieldTrait,
-  structs::Sum,
-  simplify::sum::collect_like_terms,
+use crate::{
+  F,
+    expr_field::{
+    Expr,
+    FieldTrait,
+    structs::Sum,
+    simplify::sum::simplify_svec, SVec,
+  }
 };
 
 #[inline]
@@ -29,7 +32,7 @@ pub fn sort_svec<A: Ord,B: Ord>(v: &mut Vec<(A,B)>) {
 //   type Output = Self;
 //   fn add(self, rhs: Const) -> Self::Output {
 //     Sum{ terms:
-//       collect_like_terms([self.terms,(F::one(), rhs)])
+//       simplify_svec([self.terms,(F::one(), rhs)])
 //     }
 //   }
 // }
@@ -59,7 +62,7 @@ impl<'a, Field: FieldTrait<'a>> Add for Sum<'a, Field> {
   type Output = Self;
   fn add(self, rhs: Self) -> Self::Output {
     Sum{ terms: 
-      collect_like_terms(
+      simplify_svec(
         [self.terms, rhs.terms].concat()
       )
     }
@@ -83,8 +86,8 @@ impl<'a, Field: FieldTrait<'a>> Add for Sum<'a, Field> {
 /// assert_eq!(f,vec!["π","Σ(2,π)","Π(π,2)","Σ(4,Π(π,2))"])
 /// ```
 /// MAY return a value: `Σ(v,I)`
-impl<'a, Field> Mul for Sum<'a, Field> {
-  type Output = Self;
+impl<'a, Field> Mul for Sum<'a, Field> where Expr<'a, Field>: Mul<Expr<'a, Field>, Output = Expr<'a, Field>> + Ord{
+  type Output = SVec<'a, Field>;
   fn mul(self, rhs: Self) -> Self::Output {
     let v_s = self.terms;
     let v_r = rhs.terms;
@@ -100,12 +103,19 @@ impl<'a, Field> Mul for Sum<'a, Field> {
       }
     }
     // Σ[(1,I),(1,√5),(1,√5),(5,I)] -> Σ[(6,I),(2,√5)]
-    let mut res = collect_like_terms(v_new);
+    let mut res = simplify_svec(v_new);
     res.retain(|(c,_)| !c.is_zero());
-    Sum { terms:res}
+    res
   }
 }
 
+// impl<'a, Field: 'a> Mul<F> for Ref<Sum<'a, Field>> where Expr<'a, Field>: Mul<Expr<'a, Field>, Output = Expr<'a, Field>> + Ord{
+//   type Output = SVec<'a, Field>;
+//   fn mul(self, rhs: F) -> Self::Output {
+//     Sum { 
+//     }
+//   }
+// }
 
 
 impl<'a, Field: FieldTrait<'a>> Eq for Sum<'a, Field> {}

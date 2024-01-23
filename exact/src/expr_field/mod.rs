@@ -44,6 +44,7 @@ pub mod io;
 
 mod ops;
 pub use ops::*;
+pub use structs::type_field::TypeField;
 /// Field reference
 
 ///```raw
@@ -117,56 +118,6 @@ impl<'a, Field> Clone for Expr<'a, Field> {
 //     }
 //   }
 // }
-
-#[derive(Debug)]
-pub enum TestMe<'a, Field> {
-  Smaller(&'a Field),
-  Larger(TestRef<'a, Field>)
-}
-
-#[derive(Debug)]
-pub struct TestRef<'a, Field> {
-  f: &'a Field,
-  i: usize,
-}
-
-impl<'a, Field> Copy for TestRef<'a, Field>{}
-impl<'a, Field> Clone for TestRef<'a, Field>{
-  fn clone(&self) -> Self {
-    *self
-  }
-}
-impl<'a, Field> Copy for TestMe<'a, Field>{}
-impl<'a, Field> Clone for TestMe<'a, Field>{
-  fn clone(&self) -> Self {
-    *self
-  }
-}
-impl<'a, Field> Eq for TestMe<'a, Field>{}
-impl<'a, Field> PartialEq for TestMe<'a, Field> {
-  fn eq(&self, other: &Self) -> bool {
-    match (self, other) {
-      (TestMe::Smaller(rs),TestMe::Smaller(ro)) => std::ptr::eq(rs,ro),
-      (TestMe::Larger(rs),TestMe::Larger(ro)) => std::ptr::eq(rs,ro),
-      _ => false
-    }
-  }
-}
-impl<'a, Field> PartialOrd for TestMe<'a, Field> {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(other))
-  }
-}
-impl<'a, Field> Ord for TestMe<'a, Field> {
-  fn cmp(&self, other: &Self) -> Ordering {
-    match (self, other) {
-      (TestMe::Smaller(_), TestMe::Smaller(_)) => Ordering::Equal,
-      (TestMe::Smaller(_), _) => Ordering::Less,
-      (TestMe::Larger(_),TestMe::Larger(_)) => Ordering::Equal,
-      (TestMe::Larger(_),_) => Ordering::Greater,
-    }
-  }
-}
 
 /// A reference to the field. On its own, it doesn't do anything.
 #[derive(Eq)]
@@ -310,7 +261,13 @@ pub trait FieldTrait<'a>:
   fn add_const(&'a self, c: Const) -> Expr<'a, Self>;
   fn add_fn(&'a self, f: ExprFn<'a, Self>) -> Expr<'a, Self>;
   // Add an expression <- should actually add a thingy, since expressions contain the ref already bla
-  // fn add(expr)
+  
+  /// Try to distribute a product to a sum. Not sure if recursively
+  /// ```raw
+  /// Π[(π,2),(Σ(2,π),1)] -> Σ(2,Π(π,3))
+  /// Π(Σ[1,√5],2) -> Π[Σ[1,√5],Σ[1,√5]] -> Σ[1,2√5,5] -> Σ[6,2√5] -/-> Σ(2,Σ[3,√5])
+  /// ```
+  fn try_distribute_prod(p: FieldRef<'a, Self>) -> Option<Expr<'a, Self>>;
   // get the index of an expression.
   // returns None if the expression
   // does not exist within the field.
@@ -384,6 +341,17 @@ impl<'a, Field: FieldTrait<'a>> PartialEq for Expr<'a, Field>
       },
       (Expr::Fn(r1), Expr::Fn(r2)) => {
         Field::get_fn(*r1) == Field::get_fn(*r2)
+      }
+      (Expr::Sum(r1),Expr::Prod(r2)) => { 
+        match Field::try_distribute_prod(*r2) {
+          Some(s) => {
+            *self == s
+          },
+          None => false
+        }
+      },
+      (Expr::Prod(_),Expr::Sum(_)) => {
+        other == self
       }
       _ => false
     }
@@ -473,7 +441,7 @@ impl<'a, Field: FieldTrait<'a>> Ord for Expr<'a, Field> {
 #[cfg(test)]
 mod test_expr_field {
   use crate::{F, One};
-  use super::{Expr, structs::type_field::{TypeField, TypeExpr}, FieldTrait, TestMe};
+  use super::{Expr, structs::type_field::{TypeField, TypeExpr}, FieldTrait};
 
   #[test]
   fn test_order_strict() {
@@ -508,43 +476,6 @@ mod test_expr_field {
         println!("testing {}>{}",v[i],v[j]);
         println!("testing {}>{}",v[i],v[j]);
         assert!(v[i] > v[j]);
-      }
-    }
-    // assert!(false)
-  }
-
-  #[test]
-  fn testme_order_strict() {
-    let f =  TypeField::default();
-    let tv = vec![
-      TestMe::Smaller(&f),
-      TestMe::Larger(super::TestRef { f: &f, i: 0 })
-    ];
-    
-    for i in 0..tv.len() {
-      for j in i+1..tv.len() {
-        println!("testing {:?}<{:?}",tv[i],tv[j]);
-        println!("testing {:?}<{:?}",tv[i],tv[j]);
-        assert!(tv[i] < tv[j]);
-      }
-    }
-    // let mut v: Vec<TypeExpr<'_>> = tv.iter().map(|a| f.parse(a)).collect();
-    let mut v = tv;
-    v.sort_unstable_by(|a,b|b.cmp(a));
-    for i in 0..v.len() {
-      for j in i+1..v.len() {
-        println!("testing {:?}>{:?}",v[i],v[j]);
-        println!("testing {:?}>{:?}",v[i],v[j]);
-        assert!(v[i] > v[j]);
-      }
-    }
-    let mut sv:Vec<(F, TestMe<'_, TypeField<'_>>)> = v.iter().map(|e| (F::from(1), *e)).collect();
-    sv.sort_unstable();
-    for i in 0..v.len() {
-      for j in i+1..v.len() {
-        println!("testing {:?}<{:?}",sv[i].1,sv[j].1);
-        println!("testing {:?}<{:?}",sv[i].1,sv[j].1);
-        assert!(sv[i] < sv[j]);
       }
     }
     // assert!(false)

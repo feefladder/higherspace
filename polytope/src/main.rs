@@ -536,7 +536,7 @@ fn main() -> Result<(),()>{
   // parse::<f64>("hello!");
   // let mut sc = Scanner::new("x2o5o*a3*c");
   // let mut sc = Scanner::new("x4o3o");
-  let mut sc = Scanner::new("x6f2o");
+  let mut sc = Scanner::new("x5f3o");
   let mut group: CoxGroup<f64> = sc.parse_tope::<f64>().unwrap();
   println!("{:?}", petgraph::dot::Dot::new(&group.graph));
   println!("{:?}", ndarray::Array2::from(Vec::from(&[[1,2,3],[4,5,6]])));
@@ -551,37 +551,39 @@ fn main() -> Result<(),()>{
   reflect_matrices::<f64>(&mut group.graph)?;
   println!("{:?}", f64::try_from(GenericFraction::<u32>::new(1u8,2u8)));
   
-  use std::rc::Rc;
+  // use std::rc::Rc;
 
-  let data = 5;
-  let mut rc_a = Rc::new(data);
-  let rc_b = Rc::new(data);
-  let c =  Rc::<i32>::get_mut(&mut rc_a).unwrap();
-  *c += 5;
-  println!("a: {:p}:{:?}, {:p},{:p}", rc_b, rc_b, rc_a, &data);
-  let f = F::new(1u8,2u8);
-  println!("pretty: {}, debug: {:?}, pretty debug: {:#?}",-f,f,f);
-  println!("{}", (PI*5.0).sin());
+  println!("¹³/₂");
 
-  let t_str: Vec<&str> = vec![
-    "10",
-    "10 and some text",
-    "0xdeadbeef",
-    ""
-  ];
-  for t in t_str {
-    println!("parsed string: '{}' to {:?}", t, t.to_string().parse::<u32>());
-  }
+  // let data = 5;
+  // let mut rc_a = Rc::new(data);
+  // let rc_b = Rc::new(data);
+  // let c =  Rc::<i32>::get_mut(&mut rc_a).unwrap();
+  // *c += 5;
+  // println!("a: {:p}:{:?}, {:p},{:p}", rc_b, rc_b, rc_a, &data);
+  // let f = F::new(1u8,2u8);
+  // println!("pretty: {}, debug: {:?}, pretty debug: {:#?}",-f,f,f);
+  // println!("{}", (PI*5.0).sin());
 
-  let t_str: Vec<&str> = vec![
-    "1/2",
-    "10 and some text",
-    "deadbeef",
-    ""
-  ];
-  for t in t_str {
-    println!("parsed string: '{}' to {:?}", t, t.parse::<Fraction>() );
-  }
+  // let t_str: Vec<&str> = vec![
+  //   "10",
+  //   "10 and some text",
+  //   "0xdeadbeef",
+  //   ""
+  // ];
+  // for t in t_str {
+  //   println!("parsed string: '{}' to {:?}", t, t.to_string().parse::<u32>());
+  // }
+
+  // let t_str: Vec<&str> = vec![
+  //   "1/2",
+  //   "10 and some text",
+  //   "deadbeef",
+  //   ""
+  // ];
+  // for t in t_str {
+  //   println!("parsed string: '{}' to {:?}", t, t.parse::<Fraction>() );
+  // }
   // use 
   // iso_map(&mut group.graph)?;
   // conn.execute(

@@ -1,15 +1,16 @@
 use num_traits::{One, Zero};
 use core::cell::{RefCell, Ref};
 // use appendlist::AppendList;
-use crate::expr_field::{
-  Expr, F,
-  FieldRef,
-  FieldTrait, ExprTrait, ExprFn, ExprFnTrait, SVec,
-  structs::{
-    Const,
-    Sum,
-    Prod,
-  }, PVec, io::parse_display::{Scanner, pd_expr}
+use crate::{
+  F,
+  expr_field::{
+    Expr, FieldRef, FieldTrait, ExprTrait, ExprFn, ExprFnTrait, SVec,
+    structs::{
+      Const,
+      Sum,
+      Prod,
+    }, PVec, io::parse_display::{Scanner, pd_expr}, simplify::{sum::{svecs_mul, svec_mul, svec_powi}, prod::distribute_prods}
+  }
 };
 
 pub type TypeRef<'a> = FieldRef<'a, TypeField<'a>>;
@@ -104,7 +105,7 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
           index: TypeField::maybe_add(&self.vals, s[0].0)
         })
       }
-    } else if s.len() == 1 && s[0].0 == F::one() {
+    } else if s.len() == 1 && s[0].0.is_one() {
       self.gulp(s[0].1)
     } else {
       Expr::Sum(FieldRef{
@@ -117,6 +118,8 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
   fn add_pvec(&'a self, p: PVec<'a, Self>) -> Expr<'a, Self> {
     if p.len() == 0 {
       Expr::One(self)
+    } else if p.len() == 1 && p[0].1.is_one() {
+      self.gulp(p[0].0)
     } else {
       // assert!(p.is_sorted());
       Expr::Prod(FieldRef { 
@@ -128,6 +131,21 @@ impl<'a> FieldTrait<'a> for TypeField<'a> {
 
   fn add_fn(&'a self, f: ExprFn<'a, Self>) -> Expr<'a, Self> {
     Expr::Fn(FieldRef { field: self, index: TypeField::maybe_add(&self.fns, f) })
+  }
+
+  fn try_distribute_prod(r: FieldRef<'a, Self>) -> Option<Expr<'a, Self>> {
+    // let v: Vec<(Expr<'_, TypeField<'_>>, F)> = ;
+    let (sums, rem) = distribute_prods(TypeField::get_prod(r).factors.clone());
+
+    // take out vals: Π[(π,2),(5,1)] -> Σ(5,Π(π,2))
+    // actually for non-integer powers, it'd be better to keep
+    // numbers as a vector of prime factors
+    // Π[(2,1/3),(3,1/2)] <-> Π[(4,1/6),(27,1/6)] <-> Π[(108,1/6)]
+    //                        collect ---->
+    //                        <--distribute
+    // mul_pvec_v(take_out_vals(&mut rem),sums);
+    let rem_expr = r.field.add_pvec(rem);
+    Some(r.field.add_svec(svec_mul(sums, rem_expr)))
   }
 
   fn gulp(&'a self, expr: TypeExpr<'a>) -> TypeExpr<'a>{
@@ -250,7 +268,7 @@ mod test_typefield
       ("Σ(2,π)","Σ(2,π)"),
       ("Σ[(1,I),(1,π)]","Σ[(1,I),(1,π)]"),
       ("Σ[(1,π),(1,I)]","Σ[(1,π),(1,I)]"),
-      // ("Σ[(1,π),(1,I)]","Σ[(1,I),(1,π)]"),
+      ("Σ[(1,π),(1,I)]","Σ[(1,I),(1,π)]"),
       ("Π(π,2)","Π(π,2)"),
       ("Π[(π,1),(e,1)]","Π[(π,1),(e,1)]"),
       ("Π[(π,1),(e,1)]","Π[(e,1),(π,1)]"),

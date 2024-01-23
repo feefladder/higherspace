@@ -4,7 +4,7 @@ use crate::{
     Sign,
     Expr,
     ExprFn, FieldTrait, ExprFnTrait,
-    structs::{Sum, Prod}
+    structs::{Sum, Prod}, ExprTrait
   }, io_traits::Char};
 
 
@@ -63,7 +63,7 @@ impl<'a, Field: FieldTrait<'a>> Display for ExprFn<'a, Field> {
 
 impl<'a, Field: FieldTrait<'a>> Debug for Expr<'a, Field> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self)
+    write!(f, "{:p}{}",self.field(), self)
   }
 }
 impl<'a, Field: FieldTrait<'a>> Display for Expr<'a, Field> {

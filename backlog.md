@@ -13,6 +13,12 @@ Implicitly no upper limit:
   Σ[Π(a,n)].expand() =GSeries= Π(something)
 ```
 
+This requires a concept of a function or something and that may be outside the scope of this crate, which just provides drop-in replacements for floats
+
+## Unicode printing
+
+
+
 ## parsing
 
 ### The problem: 1. delegate parsing

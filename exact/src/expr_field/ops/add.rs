@@ -1,6 +1,6 @@
 use std::ops::Add;
 
-use crate::{F,One,expr_field::{Expr, FieldTrait, simplify::sum::collect_like_terms, ExprTrait}};
+use crate::{F,One,expr_field::{Expr, FieldTrait, simplify::sum::simplify_svec, ExprTrait}};
 
 impl<
   'a,
@@ -35,21 +35,21 @@ impl<
       (Expr::Val(rs),Expr::Sum(rr)) => {
         let mut sv = Field::get_sum(rr).terms.clone();
         sv.push((Field::get_val(rs),Expr::One(rs.field)));
-        rs.field.add_svec(collect_like_terms(
+        rs.field.add_svec(simplify_svec(
           sv
         ))
       }
       (Expr::Sum(rs),Expr::Val(rr)) => {
         let mut sv = Field::get_sum(rs).terms.clone();
         sv.push((Field::get_val(rr),Expr::One(rs.field)));
-        rs.field.add_svec(collect_like_terms(
+        rs.field.add_svec(simplify_svec(
           sv
         ))
       }
       // (Expr::Val(r, vs),Expr::Const(_, ))
       (Expr::Sum(r_s),Expr::Sum(r_r)) => {
         self.field().add_svec(
-          collect_like_terms(
+          simplify_svec(
             [Field::get_sum(r_s).terms.clone(), Field::get_sum(r_r).terms.clone()].concat()
           )
         )
@@ -59,16 +59,16 @@ impl<
         // let ex_r = r_s.gulp(rhs);
         let mut s_s = Field::get_sum(r_s).terms.clone();
         s_s.push((F::one(),rhs_field));
-        self.field().add_svec(collect_like_terms(s_s))
+        self.field().add_svec(simplify_svec(s_s))
       },
       (_, Expr::Sum(r_r)) => {
         let mut sum_r = Field::get_sum(r_r).terms.clone();
         sum_r.push((F::one(), self));
-        let res = collect_like_terms(sum_r);
+        let res = simplify_svec(sum_r);
         self.field().add_svec(res)
       }
       (_,_) => {
-        let res = collect_like_terms(vec![(F::one(), self), (F::one(), rhs_field)]);
+        let res = simplify_svec(vec![(F::one(), self), (F::one(), rhs_field)]);
         self.field().add_svec(res)
       }
     }

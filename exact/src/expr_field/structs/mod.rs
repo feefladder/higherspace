@@ -5,9 +5,7 @@ use ordered_float::NotNan;
 // TODO: generic Expr
 use crate::{
   F,
-  expr_field::{
-    FieldTrait, Expr
-  }
+  expr_field::Expr
 };
 
 pub mod sum;
