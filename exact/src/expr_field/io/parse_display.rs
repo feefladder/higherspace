@@ -261,9 +261,9 @@ use num_traits::Zero;
   use crate::expr_field::structs::{type_field::TypeField, Prod};
   // use std::f64::consts::PI;
   
-    const PI: Const = unsafe { Const { ch: 'π', ascii: "pi", f64: NotNan::new_unchecked(std::f64::consts::PI)} };
-  // let E: Const = Const{ ch: 'e', ascii: "e"  , f64: NotNan::new(std::f64::consts::E ).unwrap() };
-  // let PHI: Const = Const{ ch: 'φ', ascii: "phi", f64: NotNan::from_str("1.618").unwrap()};
+  const PI: Const = unsafe { Const { ch: 'π', ascii: "pi", f64: NotNan::new_unchecked(std::f64::consts::PI)} };
+  const E: Const = unsafe { Const{ ch: 'e', ascii: "e"  , f64: NotNan::new_unchecked(std::f64::consts::E ) } };
+  const PHI: Const = unsafe { Const{ ch: 'φ', ascii: "phi", f64: NotNan::new_unchecked(1.618)} };
   #[test]
   fn test_pd_frac() {
     let test_vec: Vec<(&str, F)> = vec![
@@ -311,13 +311,13 @@ use num_traits::Zero;
   #[test]
   fn test_parse_const() {
     // cosnt
-    let PI: Const = Const { ch: 'π', ascii: "pi", f64: NotNan::new(std::f64::consts::PI).unwrap() };
-    let c_e: Const = Const{ ch: 'e', ascii: "e"  , f64: NotNan::new(std::f64::consts::E ).unwrap() };
-    let c_phi: Const = Const{ ch: 'φ', ascii: "phi", f64: NotNan::from_str("1.618").unwrap()};
+    // let PI: Const = Const { ch: 'π', ascii: "pi", f64: NotNan::new(std::f64::consts::PI).unwrap() };
+    // let c_e: Const = Const{ ch: 'e', ascii: "e"  , f64: NotNan::new(std::f64::consts::E ).unwrap() };
+    // let c_phi: Const = Const{ ch: 'φ', ascii: "phi", f64: NotNan::from_str("1.618").unwrap()};
     let test_vec = vec![
       ("π",PI),
-      ("e",c_e),
-      ("φ(1.618)",c_phi),
+      ("e",E),
+      ("φ(1.618)",PHI),
     ];
     let f = TypeField::default();
     for (asdf, res) in test_vec {
@@ -328,7 +328,7 @@ use num_traits::Zero;
   #[test]
   fn test_parse_sum_single() {
     // sum single
-    let PI: Const = Const { ch: 'π', ascii: "pi", f64: NotNan::new(std::f64::consts::PI).unwrap() };
+    // let PI: Const = Const { ch: 'π', ascii: "pi", f64: NotNan::new(std::f64::consts::PI).unwrap() };
     // let E: Const = Const{ ch: 'e', ascii: "e"  , f64: NotNan::new(std::f64::consts::E ).unwrap() };
     // let PHI: Const = Const{ ch: 'φ', ascii: "phi", f64: NotNan::from_str("1.618").unwrap()};
     let f = TypeField::default();
