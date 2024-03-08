@@ -273,7 +273,9 @@ mod test_e_rc_mul {
   // for laziness 
   // DO NOT CHANGE 
   // (will break most tests bc results are parsed from string literals like "5".to_string())
+  #[allow(non_upper_case_globals)]
   const i: u32 = 5;
+  #[allow(non_upper_case_globals)]
   const f: (u32,u32) = (1,2);
 
   // macro_rules! test_v_times_b {

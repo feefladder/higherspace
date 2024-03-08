@@ -44,7 +44,7 @@ impl From<PVec> for Expr {
     // Π(ξ6,5/2) -> 36, Π(ξ6,1/2)
     // Π(ξ2,-1/2) -> 1/2 Π(ξ2,1/2)
     let mut coeff = take_out_vals(&mut v);
-    println!("Coeff: {}", coeff);
+    // println!("Coeff: {}", coeff);
     if coeff.is_nan() {return Expr::nan();}
     if coeff.is_infinite() {
       return if coeff.is_sign_positive() {Expr::infinity()} else {Expr::neg_infinity()};
@@ -203,7 +203,7 @@ fn neg_pow_sign<T: Integer>(sign: Sign, pow: T) -> Sign {
 /// Π()
 /// ```
 fn take_out_vals(vect: &mut PVec) -> F {
-  println!("Taking vals: {:?}", vect);
+  // println!("Taking vals: {:?}", vect);
   let mut coeff: F = F::one();
   for (fact_expr, exp_frac ) in vect.iter_mut() {
     match (&fact_expr, &exp_frac) {
@@ -255,7 +255,7 @@ fn take_out_vals(vect: &mut PVec) -> F {
             let exp_int: i32 = exp_r
               .to_integer()
               .try_into().unwrap();
-            println!("Doing r^r: {:?}^{:?}", fact_r, exp_int);
+            // println!("Doing r^r: {:?}^{:?}", fact_r, exp_int);
             let new_exp_frac:F = F::Rational(*exp_sign, exp_r.fract());
             let new_f_sign = neg_pow_sign(fact_sign, exp_int);
             coeff *= F::Rational(new_f_sign, fact_r.pow(e_sign_i*exp_int));
@@ -313,6 +313,7 @@ fn div_by_root_to_f_times_root_raw(b_sgn:Sign, b_r: Ratio<FType>, exp_den: FType
 mod test_from_prod_simplify{
   use super::*;
   
+  #[allow(non_upper_case_globals)]
   const i: u32 = 5;
 
   #[test]
