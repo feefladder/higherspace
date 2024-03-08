@@ -203,7 +203,7 @@ name = "exact"
 version = "0.1.0"
 dependencies = [
  "appendlist",
- "fraction",
+ "fraction 0.15.1",
  "lyn",
  "num",
  "num-traits",
@@ -296,6 +296,16 @@ dependencies = [
 name = "fraction"
 version = "0.14.0"
 source = "git+https://github.com/dnsl48/fraction#21905f3e339ee4c20189d3ebfd7a62d1ba7cb75a"
+dependencies = [
+ "lazy_static",
+ "num",
+]
+
+[[package]]
+name = "fraction"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b486ab61634f05b11b591c38c71fb25139cb55e22be4fb6ecf649cc3736c074a"
 dependencies = [
  "lazy_static",
  "num",
@@ -706,7 +716,7 @@ name = "polytope"
 version = "0.1.0"
 dependencies = [
  "exact",
- "fraction",
+ "fraction 0.14.0",
  "lazy_static",
  "ndarray",
  "ndarray-linalg",
