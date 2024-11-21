@@ -1,5 +1,5 @@
 [package]
-name = "exact"
+name = "exxact"
 description = "drop-in float replacement for exact arithmetic"
 version = "0.1.0"
 edition = "2021"
@@ -13,7 +13,7 @@ license = "AGPL-3.0-or-later AND WTFPL"
 
 [dependencies]
 appendlist = "1.4.0"
-fraction = "0.15.1"
+fraction = {version = "0.15.1", features = ["with-unicode"]}
 lyn = "0.1.0"
 num = "0.4.1"
 num-traits = "0.2.17"

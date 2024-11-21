@@ -199,7 +199,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "exact"
+name = "exact_macros"
+version = "0.1.0"
+
+[[package]]
+name = "exxact"
 version = "0.1.0"
 dependencies = [
  "appendlist",
@@ -211,10 +215,6 @@ dependencies = [
  "prime_factorization",
  "proptest",
 ]
-
-[[package]]
-name = "exact_macros"
-version = "0.1.0"
 
 [[package]]
 name = "fallible-iterator"
@@ -715,7 +715,7 @@ checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
 name = "polytope"
 version = "0.1.0"
 dependencies = [
- "exact",
+ "exxact",
  "fraction 0.14.0",
  "lazy_static",
  "ndarray",

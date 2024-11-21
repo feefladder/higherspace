@@ -13,7 +13,7 @@ use crate::{
 
 
 /// Representation. Should return a string that results in the same value
-/// e.g. assert_eq!(exact::from(format!("{}",some_exact), some_exact)
+/// e.g. assert_eq!(exxact::from(format!("{}",some_exact), some_exact)
 /// For example:
 /// 1/2+1/2√(5/2) -> Σ((1/2,ξ1),(1/2,√5/2))
 /// Note that currently constants loose precision e.g.

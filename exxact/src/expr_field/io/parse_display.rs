@@ -49,7 +49,7 @@ impl<'a, Field: FieldTrait<'a>> Scanner<'a, Field> {
 
 /// Scans while fn_match returns `true`
 /// ```rust
-/// use exact::expr_field::{
+/// use exxact::expr_field::{
 ///   structs::type_field::TypeField,
 ///   io::parse_display::{Scanner, scan}
 /// };
@@ -78,6 +78,7 @@ fn err_or_eq<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>, c: &char) -
 
 pub fn pd_expr<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Expr<'a, Field>{
   let cha = sc.inner.peek();
+  println!("checking for expressions in {:?}", cha);
   if cha == None {
     return Expr::Zero(sc.field);
   }
@@ -92,7 +93,7 @@ pub fn pd_expr<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Expr<'
       sc.field.add_val(pd_frac(sc).unwrap())
     },
     // value without 'ξ' OR "-∞"
-    c if "-/0123456789".contains(c) => {
+    c if "-/⁄0123456789".contains(c) => {
       sc.field.add_val(pd_frac(sc).unwrap())
     }
     // Sum
@@ -118,21 +119,25 @@ fn pd_frac<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Result<F, 
   let s = scan(sc, |oc| match oc {
     None => false,
     Some(c) => {
-      "-/0123456789∞".contains(*c)
+      "-/⁄0123456789∞".contains(*c)
     }
   });
   if s.contains('∞') {
-    if s.chars().nth(0) == Some('-') {
+    if s.starts_with('-') {
       Ok(F::neg_infinity())
     } else {
       Ok(F::infinity())
     }
   } else {
-    F::from_str(&s)
+    
+    let r = F::from_unicode_str(&s);
+    println!("making frac from: {} is {:?}", s, r);
+    r
   }
 }
 
 fn pd_const<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Expr<'a, Field> {
+  println!("checking for const in: {:?}", sc.inner.peek());
   let c = *sc.inner.pop().unwrap();
   if sc.c_map.contains_key(&c) {
     sc.field.add_const(sc.c_map[&c])
@@ -156,24 +161,24 @@ fn pd_const<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Expr<'a, 
 }
 
 fn pd_sum<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Expr<'a, Field> {
-  // [(1/2,I),(1/2,√5)]
+  // [(1⁄2,I),(1⁄2,√5)]
   // ^        
   if sc.inner.take(&'[') {
     let mut v: Vec<(F, Expr<'a, Field>)> = Vec::new();
     // scan until closing bracket
-    // (1/2,I),(1/2,√5))
+    // (1⁄2,I),(1⁄2,√5))
     //  ^        ^      ^
     while sc.inner.peek().unwrap() != &']' {
-      // (1/2,I),(1/2,√5))
+      // (1⁄2,I),(1⁄2,√5))
       // ^------^ ^------^
       let t = pd_sum_tuple(sc).unwrap();
       v.push(t);
-      // (1/2,I),(1/2,√5))
+      // (1⁄2,I),(1⁄2,√5))
       //         ^  no err^
       if sc.inner.take(&',') {
       }
     }
-    // [(1/2,I),(1/2,√5)]
+    // [(1⁄2,I),(1⁄2,√5)]
     //                   ^
     err_or_eq(sc, &']');
 
@@ -189,41 +194,41 @@ fn pd_sum<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Expr<'a, Fi
 fn pd_sum_tuple<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Result<(F, Expr<'a, Field>), Error<'a, Field>> {
   err_or_eq(sc, &'(');
   let f: F = pd_frac(sc).unwrap();
-  // (1/2,I),(1/2,√5)
+  // (1⁄2,I),(1⁄2,√5)
   //     ^        ^
   err_or_eq(sc, &',');
   let e: Expr<'a, Field> = pd_expr(sc);
-  // (1/2,I),(1/2,√5)
+  // (1⁄2,I),(1⁄2,√5)
   //        ^        ^
   err_or_eq(sc, &')');
   Ok((f,e))
 }
 
 
-/// Prod Π[(I,1/2),(√5,1/2)] or Π(I,1/2) or Π{_[n=]<int>}{[^]<int>}[<expr>]
-/// will match the part without 'Π': [(I,1/2),(√5,1/2)]
+/// Prod Π[(I,1⁄2),(√5,1⁄2)] or Π(I,1⁄2) or Π{_[n=]<int>}{[^]<int>}[<expr>]
+/// will match the part without 'Π': [(I,1⁄2),(√5,1⁄2)]
 /// (expr,frac),
 fn pd_prod<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Result<Expr<'a, Field>, Error<'a, Field>> {
-  // [(I,1/2),(√5,1/2)]
+  // [(I,1⁄2),(√5,1⁄2)]
   // ^        
   if sc.inner.take(&'[') {
     // err_or_eq(sc, &'[')?;
     let mut v = Vec::new();
     // scan until closing bracket
-    // (I,1/2),(√5,1/2))
+    // (I,1⁄2),(√5,1⁄2))
     //  ^        ^      ^
     while sc.inner.peek().unwrap() != &']' {
-      // (I,1/2),(√5,1/2)
+      // (I,1⁄2),(√5,1⁄2)
       // ^------^ ^------^
       let t = pd_prod_tuple(sc)?;
       v.push(t);
-      // (I,1/2),(√5,1/2))
+      // (I,1⁄2),(√5,1⁄2))
       //         ^  no err^
       if sc.inner.take(&',') {
       } else {
       };
     }
-    // [(I,1/2),(√5,1/2)]
+    // [(I,1⁄2),(√5,1⁄2)]
     //                   ^
     err_or_eq(sc, &']');
 
@@ -239,11 +244,11 @@ fn pd_prod<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Result<Exp
 fn pd_prod_tuple<'a, Field: FieldTrait<'a>>(sc: &mut Scanner<'a, Field>) -> Result<(Expr<'a, Field>, F), Error<'a, Field>> {
   err_or_eq(sc, &'(');
   let e: Expr<'a, Field> = pd_expr(sc);
-  // (I,1/2),(√5,1/2)
+  // (I,1⁄2),(√5,1⁄2)
   //    ^        ^
   err_or_eq(sc, &',');
   let f: F = pd_frac(sc).unwrap();
-  // (I,1/2),(√5,1/2)
+  // (I,1⁄2),(√5,1⁄2)
   //        ^        ^
   err_or_eq(sc, &')');
   Ok((e,f))
@@ -269,8 +274,8 @@ use num_traits::Zero;
     let test_vec: Vec<(&str, F)> = vec![
       ("1",F::one()),
       ("-1",-F::one()),
-      ("1/2",F::new(1u8,2u8)),
-      ("-1/2",-F::new(1u8,2u8)),
+      ("1⁄2",F::new(1u8,2u8)),
+      ("-1⁄2",-F::new(1u8,2u8)),
     ];
     let f = TypeField::default();
     for (asdf, res) in test_vec {
@@ -298,7 +303,7 @@ use num_traits::Zero;
   fn test_parse_val() {
     let test_vec = vec![
       ("2", F::from(2)),
-      ("5/2",F::new(5u8,2u8)),
+      ("5⁄2",F::new(5u8,2u8)),
     ];
     let f = TypeField::default();
     for (asdf, res) in test_vec {
@@ -335,8 +340,8 @@ use num_traits::Zero;
     let pi = f.add_const(PI);
     let sqrt5 = f.add_fn(ExprFn::Sqrt(f.add_val(F::from(5))));
     let tv = vec![
-      // ("Σ(1/2,√ξ5)", vec![(F::new(1u8, 2u8),sqrt5)]),
-      ("Σ(1/2,√5)", vec![(F::new(1u8, 2u8),sqrt5)]),
+      // ("Σ(1⁄2,√ξ5)", vec![(F::new(1u8, 2u8),sqrt5)]),
+      ("Σ(1⁄2,√5)", vec![(F::new(1u8, 2u8),sqrt5)]),
       ("Σ(2,π)", vec![(F::from(2), pi)]),
       // ("Σ[(2,π)]", vec![(F::from(2), pi)]),
     ];
@@ -347,7 +352,7 @@ use num_traits::Zero;
       assert_eq!(t,format!("{}",s));
     }
     // f.parse("Σ(2,π)");
-    // f.parse("Σ(1/2,√ξ5)");
+    // f.parse("Σ(1⁄2,√ξ5)");
   }
   #[test]
   fn test_parse_sum_multi() {
@@ -356,9 +361,9 @@ use num_traits::Zero;
     let one = Expr::One(&f);
     let sqrt5 = f.add_fn(ExprFn::Sqrt(f.add_val(F::from(5))));
     let tv = vec![
-      ("Σ[(1/2,I),(1/2,√5)]", vec![(F::new(1u8, 2u8),one),(F::new(1u8,2u8),sqrt5)]),
+      ("Σ[(1⁄2,I),(1⁄2,√5)]", vec![(F::new(1u8, 2u8),one),(F::new(1u8,2u8),sqrt5)]),
       ("Σ[(2,I),(1,π)]", vec![(F::from(2), one), (F::one(), pi)]),
-      ("Σ[(1/2,√5),(1/2,I)]", vec![(F::new(1u8,2u8),one),(F::new(1u8,2u8),sqrt5)]),
+      ("Σ[(1⁄2,√5),(1⁄2,I)]", vec![(F::new(1u8,2u8),one),(F::new(1u8,2u8),sqrt5)]),
     ];
     // sum multi
     for (t, mut res) in tv {
@@ -425,7 +430,7 @@ use num_traits::Zero;
     // let sqrt5 = f.add_fn(ExprFn::Sqrt(f.add_val(F::from(5))));
     let tv = vec![
       ("√5", f.add_val(F::from(5))),
-      ("√5/2", f.add_val(F::new(5u8,2u8))),
+      ("√5⁄2", f.add_val(F::new(5u8,2u8))),
       ("√π", pi),
       ("√Σ(2,π)", f.add_svec(vec![(F::from(2),pi)])),
       // ("√Σ[(2,π)]", f.add_svec(vec![(F::from(2),pi)])),

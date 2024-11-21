@@ -79,6 +79,12 @@ pub enum Expr<'a, Field>
   Fn(FieldRef<'a, Field>),
 }
 
+impl Expr<'a, Field> {
+  fn is_zero(&self) -> bool {
+    matches!(self, Expr::Zero(_))
+  }
+}
+
 // impl<'a, Field: FieldTrait<'a>> Hash for Expr<'a, Field> {
   
 // }
@@ -241,7 +247,6 @@ pub trait FieldTrait<'a>:
   fn get_sum(r: FieldRef<'a, Self>) -> Ref<Sum<'a, Self>>;
   fn get_prod(r: FieldRef<'a, Self>) -> Ref<Prod<'a, Self>>;
   
-
   /// Add a raw sum vector to the field. Should implement the following simplifications:
   /// ```raw
   /// Σ() -> O
@@ -277,6 +282,14 @@ pub trait FieldTrait<'a>:
   // Get the index, append if it doesn't exist within this field
   // fn i_or_add(&self, expr: ExType) -> usize;
   // fn add(&self, expr: ExType) -> usize;
+  /// Parse a string into an expression
+  /// Supports round-trips with Display
+  /// ```
+  /// use exxact::expr_field::{TypeField, FieldTrait};
+  /// let f = TypeField::default();
+  /// let s = "Σ[1⁄2+1⁄2√5)]";
+  /// assert_eq!(format!("{}",f.parse(s)),s);
+  /// ```
   fn parse(&'a self, input: &str) -> Expr<'a, Self>;
 }
 

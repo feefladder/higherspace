@@ -2,7 +2,7 @@
 
 members = [
     "polytope",
-    "exact",
+    "exxact",
     "exact_macros",
 ]
 resolver = "2"

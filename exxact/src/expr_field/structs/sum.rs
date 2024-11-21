@@ -50,12 +50,13 @@ pub fn sort_svec<A: Ord,B: Ord>(v: &mut Vec<(A,B)>) {
 /// Σ[(1,Ι),(1,√5)] "*2"      -> Σ[(1,I),(1,√5),(1,I),(1,√5)] -> Σ[(2,I),(2,√5)]
 /// ```
 /// ```
-/// let f = FlatField::new();
+/// # use exxact::expr_field::{TypeField, FieldTrait};
+/// let f = TypeField::default();
 /// //     add π to field-\
-/// assert_eq!(f.parse("Σ(2,π)")+f.parse("Σ(2,π)"),f.parse("Σ(4,π)"))
+/// assert_eq!(f.parse("Σ(2,π)")+f.parse("Σ(2,π)"),f.parse("Σ(4,π)"));
 /// // add Σ(2,π) to field-/
 /// // Σ(4,π) is added to field by Expr-sum
-/// assert_eq!(f,vec!["π","Σ(2,π)","Σ(4,π)"])
+/// // assert_eq!(f,vec!["π","Σ(2,π)","Σ(4,π)"]);
 /// ```
 /// MAY return an empty sum: `Σ()` or value: `Σ(v,Ι)`
 impl<'a, Field: FieldTrait<'a>> Add for Sum<'a, Field> {
@@ -77,13 +78,14 @@ impl<'a, Field: FieldTrait<'a>> Add for Sum<'a, Field> {
 /// Σ[(1,Ι),(1,√5)] ^2        = Σ[(2,√5),(6,Ι)]
 /// ```
 /// ```
-/// let f = FlatField::new();
+/// # use exxact::expr_field::{TypeField, FieldTrait};
+/// let f = TypeField::default();
 /// //     add π to field-\
 /// assert_eq!(f.parse("Σ(2,π)")*f.parse("Σ(2,π)"),f.parse("Σ(4,Π(π,2))"))
 /// // add Σ(2,π) to field-/                                    |
 /// // Π(π,2) is added to field as "inner": π*π-----------------/
 /// // Σ(4,Π(π,2)) is added by Expr-prod
-/// assert_eq!(f,vec!["π","Σ(2,π)","Π(π,2)","Σ(4,Π(π,2))"])
+/// // assert_eq!(f,vec!["π","Σ(2,π)","Π(π,2)","Σ(4,Π(π,2))"])
 /// ```
 /// MAY return a value: `Σ(v,I)`
 impl<'a, Field> Mul for Sum<'a, Field> where Expr<'a, Field>: Mul<Expr<'a, Field>, Output = Expr<'a, Field>> + Ord{

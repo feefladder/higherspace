@@ -25,7 +25,7 @@ Uses "Field" in the [mathematical sense](https://en.wikipedia.org/wiki/Field_(ma
 That is, for every operation that is applied to two numbers in a field, the result is added to that field. An operation to two numbers in different fields will add the result to the left-hand-side of the operation:
 
 ```rust
-use exact::expr_field::TypeField;
+use exxact::expr_field::TypeField;
 let f1 = TypeField::new();
 let f2 = TypeField::new();
 
