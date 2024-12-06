@@ -1,1 +1,3 @@
 # Conclusion
+
+Rust was selected as providing the most potential for building digital ecosystems that reflect physical ecosystems. Then, a library was developed and embedded in the pre-existing ecosystem while safeguarding its use in accordance with CARE principles. This meant not following industry standards and possibly slower adoption, but that is a price to pay for diverting from the status quo. Finally, a Bevy plugin was developed that should streamline the addition of geospatial data to future games being developed. Proper funding and reward systems for open source development still remains an open question.

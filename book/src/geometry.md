@@ -568,7 +568,7 @@ f    o
 **Fig. 8** Image trying to convince the reader to get interested and collaborate.
 
 ##### Expanded kaleido-facetings
-  
+
 [Of particular interest within the Johnson solids are 8 johnson solids that constitute the so-called "Crown Jewels" of the set, since they cannot be constructed by simple "lego-ing" of smaller parts.](https://www.qfbox.info/4d/johnson) It was discovered in 2014 that three of these crown jewels, the bilunabirotunda, triangular hebesphenorotuna and orthocupolarotunda can be derived from the icosahedron in a special way. We'll start with the bilunabirotunda, following [Quickfur's explanation](https://www.qfbox.info/4d/J91).
 
 <media-tag src="https://cryptpad.disroot.org/blob/93/93368513feab97de24c63b6473485503bc2caa240fdeb863" data-crypto-key="cryptpad:qW+GmoAV7up0UfkFFTEk5fKAZErw70hNCK1Pvr7VOZE="></media-tag>
@@ -771,6 +771,79 @@ o5x    o5x  x5x
 o5o    o5o  x5o
 ```
 
+##### Adding the 4th dimension
+
+Adding a fourth dimension to our geometry brings an immediate problem: I cannot see or feel in 4D, since the visible physical world is 3D. Therefore, I have not developed the necessary intuition to be able to see 4D. One may argue that it is not needed to have visual 4D intuition, since mathematical analysis is enough to draw conclusions.
+
+However, mathematical analysis also builds on - learned - intuition. For me it even goes as far as that I find intuition in normal social situations difficut if I have not built a fitting mathematical framework for that situation.
+
+Following [Quickfur's explanation](https://www.qfbox.info/4d/vis/05-proj-1), which you should absolutely read righ now, we'll shortly discuss how to visualize a 4-dimensional object. For that, we'll start out with the simplest shapes: geometric ones. That all edges are the same length means that all distortions are because of rotations relative to the viewpoint. If that's difficult to understand, picture a square:
+
+![](./img/square_0.png)
+
+We and a 2D being will agree that it is possible to rotate the square by 45 degrees:
+
+![](./img/square_45_xy.png)
+
+As 3D beings, however, we'll tell the 2D being that there's another 2 axes of rotation. For example, we'll say it is possible to rotate the square by 45° along its right edge:
+
+![](./img/square_45.png)
+
+As we can see, it appears as if the left edge has only moved towards the right. We'd tell the flatlander that the edge has moved and that the square is now sticking out of the screen. Especially in the case of a 90° rotation, where the square would only appear as a single edge:
+
+![](./img/square_90_xz.png)
+
+And when rotating:
+
+![](./img/square_rot.webp)
+
+The same happens one dimension up - by dimensional analogy: In an orthographic projection, a rotation in a direction that goes "one dimension up" can be seen as "squishing" the object in the other direction:
+
+![](./img/cuberot.webp)
+![](./img/cuberot_ortho.webp)
+
+Now we have a bit of a grasp of what rotation does, lets take a look at a 4D object: the icosahedral pyramid, which can be constructed by adding a vertex above an icosahedron, in the same way that a pentagonal pyramid can be constructed by adding a vertex on top of a pentagon: 
+
+[<img src="./img/ikepy.png" width=256/>](./img/ikepy.png)[<img src="./img/peppy.png" width=256/>](./img/peppy.png)
+
+The above is where we view the pyramid from the top, centering the top vertex. Alternatively, one could look from either the side or bottom, showing its triangular face:
+
+![](./img/ikepy_peppy_side.png)
+![](./img/ikepy_peppy_bot.png)
+
+![](./img/ikepy_rot.webp)
+![](./img/ikepy_rot_orth.webp)
+
+When the base of the pyramid, coloured in red, is visible, it actually obscures the view of the triangles/tetrahedra that connect it with the point, coloured in blue. Since I built the icosahedral pyramid in 3D software, we cannot properly shade it: Shadows and light reflection that allow us to intuitively infer the 3-dimensionality from the pentagonal pyramid on the left simply does not work for the icosahedral pyramid, since it is a 4D object and the software is 3D, so I had to manually construct a 3D projection of the icosphere including its rotation.
+
+In lace towers, the two would look like the following:
+
+```
+pentagonal pyramid | icosahedral pyramid
+o5o                | o3o5o
+x5o                | x3o5o
+```
+
+The one on the left, we can easily understand, and we can understand the layers of the one on the right, but it becomes more difficult to grasp when those layers are stacked on top of each other. Additionally, one may wonder if the icosahedral pyramid is part of a lerger shape, in the same way that a pentagonal pyramid is part of an icosahedron. Indeed, this is the case: it [forms the top of a 600-cell](https://www.qfbox.info/4d/600-cell)
+
+![](https://www.qfbox.info/4d/img/600cell-002b.png)![](https://www.qfbox.info/4d/img/600cell-102b.png)
+
+Now, there are more possible shapes than only the icosahedral pyramid. Klitzing, in (2000) has shown that all platonic solids separately can form 4D shapes that all have unit edge length; the segmentochora. In 2014, 
+
+##### Towards the pluriverse
+
+
+
+Notably, [cube atop icosahedron](https://www.qfbox.info/4d/K4-21) is a shape that combines two polyhedra from different symmetry groups. Please follow the link to learn about its structure. Below is an image of its rotating wireframe. Please take the time to squint your eyes and see it as an actually rotating object, around a vertical axis to the viewpoint.
+
+![](./img/plur_ikube_rot_wf.webp)
+
+![](./img/plur_ikube_rot_comp.webp)
+
+![](./img/plur_plats_rot_wf.webp)
+
+I personally especially like the following stack:
+
 ```
 x3o3o
 x3o4o
@@ -779,11 +852,13 @@ x3o5o
 o3o5x
 ```
   
+This is a stack of all platonic sol
+
 ```
 o3o3o5x <- 120-cell
 ```
 
-Rather, they rely on "partial stott expansion"/[Expanded Kaleido-faceting](https://bendwavy.org/klitzing/explain/ekf.htm) ([J91](https://qfbix.info/4d/, J92), "snubbing" (J84, J85), cut-open-and-modify (J86, J88, J89). It has been proven (Johnson, 1966) that these are the only 3-dimensional convex polyhedra with regular faces. The interesting question thereafter is: [How many of those exist in 4D](http://hi.gher.space/wiki/CRF_polychora_discovery_project)? We know that the number is finite, but very large. The 600-cell alone has over a billion separate diminishings. Therefore, the search is mostly centered on "interesting" or crown-jewel-like polychora. Especially the question of the existence of non-prismatic polychora that have cut-open-and-modify or snub Johnson Solids remains open as a smaller sub-question. Now, that would require a brute-force search algorithm on 4-dimensional geometry, which I set out to lay the groundwork for.
+Rather, they rely on "partial stott expansion"/[Expanded Kaleido-faceting](https://bendwavy.org/klitzing/explain/ekf.htm) ([J91](https://qfbox.info/4d/, J92), "snubbing" (J84, J85), cut-open-and-modify (J86, J88, J89). It has been proven (Johnson, 1966) that these are the only 3-dimensional convex polyhedra with regular faces. The interesting question thereafter is: [How many of those exist in 4D](http://hi.gher.space/wiki/CRF_polychora_discovery_project)? We know that the number is finite, but very large. The 600-cell alone has over a billion separate diminishings. Therefore, the search is mostly centered on "interesting" or crown-jewel-like polychora. Especially the question of the existence of non-prismatic polychora that have cut-open-and-modify or snub Johnson Solids remains open as a smaller sub-question. Now, that would require a brute-force search algorithm on 4-dimensional geometry, which I set out to lay the groundwork for.
   
 My main interest in 4D geometry, however, is an artistic one, and one of the most beautiful things of 4D are Dr. Richard Klitzing's Lace Cities. Below, I have used the []"pentagonal lace city" of the 600-cell](https://bendwavy.org/klitzing/incmats/ex.htm) to describe electrostatic potential. (the polychoron is cut in half and the "halves" are put on each other)
 ```

@@ -1,5 +1,14 @@
 # Soil
 
+## Four perspectives on software development
+
+As we have learned from our geometric endeavours, viewing something from different perspectives can give insights that cannot be gained from a single perspective only. <!-- Furthermore, it bears similarities to the narrative methodologies of Wekker (2016) and [Levy (2013)](http://www.newagefraud.org/smf/index.php?topic=4143). In White Innocence, Wekker uses a so-called "rag-picking" methodology, where she gathers knowledge from a diverse range of methodologies and sources to establish the concept of "White Innocence". In Disspelling Wetiko, Levy takes a somewhat analogous approach of gathering knowledge from diverse sources as different perspectives on a single "thing": the Wetiko mind-virus. The positionality of these two people, however, vastly differs: I am currently having huge doubts about actually quot -->
+Therefore, I will be using the following four perspectives on software development interchangeably:
+1. Mythological/literary
+2. Ecological
+3. Interpersonal
+4. Technical/literal
+
 ### Background/Soil
 
 Since this thesis is concerned with computer-technical subjects, but not geared to a computer-technical audience, I will use an analogy of soil ecology and agroecological farming throughout this thesis for explaining (socio)digital systems. Additionally, I will defend "playful engagement" [with the computer/AI] as an integral part of (open source) software development.
