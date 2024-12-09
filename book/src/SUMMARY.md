@@ -10,3 +10,5 @@
   - [RQ 3 Embedding](./methods/3_growth.md)
 - [Mycelia](./mycelia_discussion.md)
 - [Conclusion](./conclusion.md)
+
+

@@ -161,6 +161,12 @@ easy extra:
 - bevy_terrain?
 where?
 
+which tools
+which new tools
+where/who uses them?
+introduction
+SRQ 2 verder maken
+
 
 long:
 
@@ -187,7 +193,6 @@ long:
 - [ ] licensing
   - [ ] [reference doc](https://cryptpad.disroot.org/code/#/2/code/view/YX4fyHFIHoaAdReeq8oay6cmqk2R0xGAc6zsDE0tJLA/present/)
   - [ ] write summary of:
-    - [ ] 
 - [ ] The AHF Book aka thesis report
 
 

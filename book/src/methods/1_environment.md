@@ -1,11 +1,20 @@
 1. What scoio-technical environment can serve as a fertile soil for building playful models, in particular an agroecological farming game?
 
+- programming language?
 - dependency management/seed exchange: How well can different projects interoperate
 - availability of game engines
 - adaptibility of the environment to agroecological games.
 - Advent of cloud-native geospatial data, where a peer-to-peer game using cloud-based geospatial data is possible
   - link this to 
     > Indigenous kinship protocols can point us towards potential approaches to developing rich, robust  and expansive approaches to our relationships with AI systems and serve as guidelines for AI system  developers. 15 Such protocols would reinforce the notion that, while the developers might assume they  are building a product or tool, they are actually building a relationship to which they should attend. (Lewis et al. 2020)
+  <!-- - expand the notion of AI beyond machine learning to encompass all human-created digital systems, importantly including Zoom and other messaging services, then argue that . -->
+- therefore, a Cloud-Optimized Geotiff (COG) client that works inside a game engine is what we'll be developing
+- reached out to Godot devs,
+  > Not enough interest and tiff is a rather large specification to support. We have EXR and maybe we'll use some PNG HDR thing.
+  so another engine it was
+- Needed to run in browser -> Rust
+  - Most popular engine in Rust is Bevy
+  - Also there is rgis and bevy_terrain using Bevy
 
 
 **The focus is actually on being able to load in raster data to run an erosion model.**
@@ -33,18 +42,19 @@ In our farm analogy, we are able to farm and sustain ourselves because the surro
 
 #### Programming Languages
 
-|language|Personal familiarity|Compiled/interpreted|
-|:--|:--|:--|
-|C++|++|compiled|
-|Rust|
-|GDScript|
-|Javascript|
+|language|Personal familiarity|Compiled/interpreted|difficulty|
+|:--|:--|:--|:--|
+|C++|++|compiled|+++|
+|Rust|++|compiled <- |+|
+|GDScript|+|interpreted|-|
+|Javascript|+|interpreted|+|
+|Python| ++ | interpreted|-|
 
 Godot is developed in _C++_, and has made its own scripting language _GDScript_, which works more like C++ and looks like Python. This allows for faster prototyping: Since C++ is an unsafe, more low-level language, there is more control, more cognitive overhead and therefore slower development. Compare this to, when planting crops, first drawing lines or grids in the sand and then planting only on those lines. If 
 
 Since Godot 4.0, the way C++ code can be added has changed, from [GDNative]() to [GDExtension](), where [C++]() [modules]() has remained the same. For our use-case of being able to read Cloud-Optimized GeoTIFFs directly into the game, we would need to link against [libtiff]() or [tinytiff](). When I proposed adding tiff support to the core engine, I received the following answer:
 
-> Not enough interest and tiff is a rather large specification to support. We have EXR and maybe we'll use some PNG HDR thing.
+
 
 This is one - relevant - example of inflexibility in the C++ ecosystem. There is another interesting aspect in C++ called ABI (Application Binary Interface) stability. ABI exists in a very deep layer in the soil, where it normally only concerns people that write the standard library and compilers. In the farming tools analogy it could be seen as an unchanging connection mechanism. For many reasons, this is beneficial: Only a single stick is needed that can hook on a rake, shovel, hoe or fork. The downside, however is that this mechanism is unchaning: Whenever a better mechanism is invented, it cannot be used because of stability.  
 
